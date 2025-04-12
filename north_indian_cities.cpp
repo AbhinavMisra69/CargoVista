@@ -21,27 +21,15 @@ double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-void floydWarshall(const vector<City>& cities, vector<vector<double>>& dist) {
-    int n = cities.size();
-    dist.resize(n, vector<double>(n, numeric_limits<double>::max()));
+void floydWarshallFromAdjMatrix(vector<vector<double>>& adjMatrix) {
+    int n = adjMatrix.size();
 
-    // Initialize the matrix with Euclidean distances
-    for (int i = 0; i < n; ++i) {
-        dist[i][i] = 0;
-        for (int j = 0; j < n; ++j) {
-            if (i != j) {
-                dist[i][j] = euclidean(cities[i], cities[j]);
-            }
-        }
-    }
-
-    // Floyd-Warshall Algorithm
     for (int k = 0; k < n; ++k) {
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
-                if (dist[i][k] < numeric_limits<double>::max() && 
-                    dist[k][j] < numeric_limits<double>::max()) {
-                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+                if (adjMatrix[i][k] < numeric_limits<double>::max() &&
+                    adjMatrix[k][j] < numeric_limits<double>::max()) {
+                    adjMatrix[i][j] = min(adjMatrix[i][j], adjMatrix[i][k] + adjMatrix[k][j]);
                 }
             }
         }
