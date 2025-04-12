@@ -16,76 +16,77 @@ double euclidean(const Point& a, const Point& b) {
     return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
 }
 
-vector<int> kMeansHubSelection(vector<Node>& nodes, int k, int maxIterations = 100) {
-    int n = nodes.size();
-    vector<Node> centroids;
+
+vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double& total_wcss) {
+    int n = cities.size();
+    vector<City> centroids(k);
+    vector<vector<City>> clusters(k);
     vector<int> labels(n, -1);
 
-    // Random initialization of centroids
     srand(time(0));
-    for (int i = 0; i < k; ++i) {
-        centroids.push_back(nodes[rand() % n]);
-    }
 
-    for (int iter = 0; iter < maxIterations; ++iter) {
-        bool changed = false;
+    // Randomly initialize centroids
+    for (int i = 0; i < k; ++i)
+        centroids[i] = cities[rand() % n];
 
-        // Assign each point to the nearest centroid
+    bool changed = true;
+    int max_iters = 100;
+
+    while (changed && max_iters--) {
+        changed = false;
+
+        // Clear previous cluster data
+        for (int i = 0; i < k; ++i)
+            clusters[i].clear();
+
+        // Assign cities to nearest centroid
         for (int i = 0; i < n; ++i) {
-            double minDist = DBL_MAX;
-            int bestCluster = 0;
+            double min_dist = numeric_limits<double>::max();
+            int best_cluster = 0;
+
             for (int j = 0; j < k; ++j) {
-                double dist = euclideanDistance(nodes[i], centroids[j]);
-                if (dist < minDist) {
-                    minDist = dist;
-                    bestCluster = j;
+                double dist = euclidean(cities[i], centroids[j]);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    best_cluster = j;
                 }
             }
 
-            if (labels[i] != bestCluster) {
+            if (labels[i] != best_cluster) {
                 changed = true;
-                labels[i] = bestCluster;
+                labels[i] = best_cluster;
             }
+
+            clusters[best_cluster].push_back(cities[i]);
         }
 
-        if (!changed) break; // Converged
+        // Update centroids
+        for (int i = 0; i < k; ++i) {
+            double sum_x = 0, sum_y = 0;
+            int cluster_size = clusters[i].size();
 
-        // Recalculate centroids
-        vector<double> sumX(k, 0), sumY(k, 0);
-        vector<int> count(k, 0);
-        for (int i = 0; i < n; ++i) {
-            sumX[labels[i]] += nodes[i].x;
-            sumY[labels[i]] += nodes[i].y;
-            count[labels[i]]++;
-        }
+            for (const City& c : clusters[i]) {
+                sum_x += c.x;
+                sum_y += c.y;
+            }
 
-        for (int j = 0; j < k; ++j) {
-            if (count[j] == 0) continue;
-            centroids[j].x = sumX[j] / count[j];
-            centroids[j].y = sumY[j] / count[j];
-        }
-    }
-
-    // Choose actual nodes closest to each centroid as hubs
-    vector<int> hubs(k, -1);
-    for (int j = 0; j < k; ++j) {
-        double minDist = DBL_MAX;
-        for (int i = 0; i < n; ++i) {
-            if (labels[i] == j) {
-                double dist = euclideanDistance(nodes[i], centroids[j]);
-                if (dist < minDist) {
-                    minDist = dist;
-                    hubs[j] = nodes[i].id;
-                }
+            if (cluster_size > 0) {
+                centroids[i].x = sum_x / cluster_size;
+                centroids[i].y = sum_y / cluster_size;
             }
         }
     }
 
-    return hubs;
+    // Calculate total WCSS
+    total_wcss = 0;
+    for (int i = 0; i < k; ++i) {
+        for (const City& c : clusters[i]) {
+            total_wcss += pow(euclidean(c, centroids[i]), 2);
+        }
+    }
+
+    return clusters;
 }
-
-
-
 
 
 int main() {
@@ -148,13 +149,19 @@ int main() {
     }
 
 
-    int k = 10; // Number of hubs you want
-    vector<int> hubIds = kMeansHubSelection(cities, k);
+     int k = 3;
+    double wcss = 0;
+    auto clusters = kMeansClustering(cities, k, wcss);
 
-    cout << "Selected Hubs:\n";
-    for (int id : hubIds) {
-        cout << nodes[id].name << " (ID: " << id << ")\n";
+    for (int i = 0; i < clusters.size(); ++i) {
+        cout << "Cluster " << i + 1 << ":\n";
+        for (const City& c : clusters[i]) {
+            cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
+        }
+        cout << "\n";
     }
+
+    cout << "Total WCSS: " << wcss << endl;
 
     return 0;
 }
