@@ -12,7 +12,6 @@ struct City {
     int id;
     string name;
     int x, y;
-
     City(){}
 
     City(int id, const string& name, int x, int y)
@@ -23,9 +22,9 @@ double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-void floydWarshallFromAdjMatrix(vector<vector<double>>& adjMatrix) {
-    int n = adjMatrix.size();
-
+vector<vector<double>> floydWarshallFromAdjMatrix(vector<vector<double>>& adj_matrix) {
+    int n = adj_matrix.size();
+    vector<vector<double>>& adjMatrix=adj_matrix;
     for (int k = 0; k < n; ++k) {
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
@@ -36,6 +35,7 @@ void floydWarshallFromAdjMatrix(vector<vector<double>>& adjMatrix) {
             }
         }
     }
+    return adjMatrix;
 }
 
 
@@ -47,7 +47,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
 
     srand(time(0));
 
-   
+    // Initialize centroids randomly
     for (int i = 0; i < k; ++i)
         centroids[i] = cities[rand() % n];
 
@@ -80,7 +80,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
             clusters[best_cluster].push_back(cities[i]);
         }
 
-       
+        // Recalculate centroids
         for (int i = 0; i < k; ++i) {
             double sum_x = 0, sum_y = 0;
             int cluster_size = clusters[i].size();
@@ -97,7 +97,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
         }
     }
 
-   
+    // Compute total WCSS
     total_wcss = 0;
     for (int i = 0; i < k; ++i) {
         for (const City& c : clusters[i]) {
@@ -239,6 +239,7 @@ int main() {
     {19.50, 0.00, 0.00, 0.00, 0.00, 164.44, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 70.31, 0.00, 0.00, 0.00, 74.11, 0.00, 0.00, 0.00, 149.64, 0.00, 0.00, 195.00, 0.00, 0.00, 29.07, 0.00, 0.00, 0.00, 18.38, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 140.62, 115.00, 0.00, 0.00, 0.00, 0.00},
     {195.54, 0.00, 0.00, 201.92, 0.00, 0.00, 0.00, 0.00, 150.06, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 261.62, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 334.61, 0.00, 0.00, 0.00, 0.00, 282.21, 0.00, 178.84, 137.73, 0.00, 181.07, 178.48, 0.00, 0.00, 189.28, 0.00, 0.00, 311.25, 331.50, 328.94, 0.00, 293.65, 0.00, 203.59, 0.00, 0.00},
 };
+    vector<vector<double>> distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
     int k = 10;
     double wcss = 0;
@@ -246,7 +247,7 @@ int main() {
     vector<City>hubs;
     for(auto cluster:clusters)
     {
-        hubs.push_back(findHubs(cluster,adj_matrix));
+        hubs.push_back(findHubs(cluster,distBtwCities));
     }
 
     for (int i = 0; i < clusters.size(); ++i) {
