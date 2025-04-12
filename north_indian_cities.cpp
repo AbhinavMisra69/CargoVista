@@ -12,6 +12,7 @@ struct City {
     int id;
     string name;
     int x, y;
+
     City(){}
 
     City(int id, const string& name, int x, int y)
@@ -46,7 +47,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
 
     srand(time(0));
 
-    // Initialize centroids randomly
+   
     for (int i = 0; i < k; ++i)
         centroids[i] = cities[rand() % n];
 
@@ -79,7 +80,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
             clusters[best_cluster].push_back(cities[i]);
         }
 
-        // Recalculate centroids
+       
         for (int i = 0; i < k; ++i) {
             double sum_x = 0, sum_y = 0;
             int cluster_size = clusters[i].size();
@@ -96,7 +97,7 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
         }
     }
 
-    // Compute total WCSS
+   
     total_wcss = 0;
     for (int i = 0; i < k; ++i) {
         for (const City& c : clusters[i]) {
