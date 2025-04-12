@@ -12,6 +12,76 @@ public:
         : id(id), name(name), x(x), y(y) {}
 };
 
+
+vector<int> kMeansHubSelection(vector<Node>& nodes, int k, int maxIterations = 100) {
+    int n = nodes.size();
+    vector<Node> centroids;
+    vector<int> labels(n, -1);
+
+    // Random initialization of centroids
+    srand(time(0));
+    for (int i = 0; i < k; ++i) {
+        centroids.push_back(nodes[rand() % n]);
+    }
+
+    for (int iter = 0; iter < maxIterations; ++iter) {
+        bool changed = false;
+
+        // Assign each point to the nearest centroid
+        for (int i = 0; i < n; ++i) {
+            double minDist = DBL_MAX;
+            int bestCluster = 0;
+            for (int j = 0; j < k; ++j) {
+                double dist = euclideanDistance(nodes[i], centroids[j]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    bestCluster = j;
+                }
+            }
+
+            if (labels[i] != bestCluster) {
+                changed = true;
+                labels[i] = bestCluster;
+            }
+        }
+
+        if (!changed) break; // Converged
+
+        // Recalculate centroids
+        vector<double> sumX(k, 0), sumY(k, 0);
+        vector<int> count(k, 0);
+        for (int i = 0; i < n; ++i) {
+            sumX[labels[i]] += nodes[i].x;
+            sumY[labels[i]] += nodes[i].y;
+            count[labels[i]]++;
+        }
+
+        for (int j = 0; j < k; ++j) {
+            if (count[j] == 0) continue;
+            centroids[j].x = sumX[j] / count[j];
+            centroids[j].y = sumY[j] / count[j];
+        }
+    }
+
+    // Choose actual nodes closest to each centroid as hubs
+    vector<int> hubs(k, -1);
+    for (int j = 0; j < k; ++j) {
+        double minDist = DBL_MAX;
+        for (int i = 0; i < n; ++i) {
+            if (labels[i] == j) {
+                double dist = euclideanDistance(nodes[i], centroids[j]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    hubs[j] = nodes[i].id;
+                }
+            }
+        }
+    }
+
+    return hubs;
+}
+
+
 struct DeliveryRequest {
     int id;
     int origin;
@@ -122,6 +192,15 @@ int main() {
     for (const Node& city : cities) {
         std::cout << "City: " << city.name << " (ID: " << city.id
                   << ", X: " << city.x << ", Y: " << city.y << ")\n";
+    }
+
+
+     int k = 2; // Number of hubs you want
+    vector<int> hubIds = kMeansHubSelection(nodes, k);
+
+    cout << "Selected Hubs:\n";
+    for (int id : hubIds) {
+        cout << nodes[id].name << " (ID: " << id << ")\n";
     }
 
     return 0;
