@@ -12,6 +12,9 @@ public:
         : id(id), name(name), x(x), y(y) {}
 };
 
+double euclidean(const Point& a, const Point& b) {
+    return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
+}
 
 vector<int> kMeansHubSelection(vector<Node>& nodes, int k, int maxIterations = 100) {
     int n = nodes.size();
