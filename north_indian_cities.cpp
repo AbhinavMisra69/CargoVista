@@ -149,7 +149,7 @@ int main() {
     }
 
 
-     int k = 3;
+     int k = 10;
     double wcss = 0;
     auto clusters = kMeansClustering(cities, k, wcss);
 
