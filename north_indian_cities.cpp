@@ -82,57 +82,7 @@ vector<int> kMeansHubSelection(vector<Node>& nodes, int k, int maxIterations = 1
 }
 
 
-struct DeliveryRequest {
-    int id;
-    int origin;
-    int destination;
-    int weight;
-    int priority;     // Lower = more urgent
-    time_t timestamp;
 
-    // Constructor for easier creation
-    DeliveryRequest(int id_, int o, int d, int w, int p)
-        : id(id_), origin(o), destination(d), weight(w), priority(p), timestamp(time(0)) {}
-};
-
-struct CompareRequests {
-    bool operator()(const DeliveryRequest& a, const DeliveryRequest& b) {
-        // Lower priority value means higher priority
-        return a.priority > b.priority;
-    }
-};
-
-
-void simulateRealTime(Graph& graph, vector<int>& hubIds) {
-    priority_queue<DeliveryRequest, vector<DeliveryRequest>, CompareRequests> requestQueue;
-
-    int reqCounter = 1;
-    while (true) {
-        // Simulate incoming request
-        int origin = rand() % graph.numNodes;
-        int dest = rand() % graph.numNodes;
-        if (origin == dest) continue;
-
-        int weight = rand() % 10 + 1;
-        int priority = rand() % 5 + 1; // 1 = highest priority, 5 = lowest
-
-        DeliveryRequest req(reqCounter++, origin, dest, weight, priority);
-        requestQueue.push(req);
-
-        cout << "\n📥 New request queued: "
-             << graph.nodes[origin].name << " → " << graph.nodes[dest].name
-             << " | Priority: " << priority << "\n";
-
-        // Process the top-priority request if available
-        if (!requestQueue.empty()) {
-            DeliveryRequest topReq = requestQueue.top();
-            requestQueue.pop();
-            handleNewRequest(graph, topReq, hubIds);
-        }
-
-        this_thread::sleep_for(chrono::seconds(3));
-    }
-}
 
 
 int main() {
@@ -195,8 +145,8 @@ int main() {
     }
 
 
-     int k = 2; // Number of hubs you want
-    vector<int> hubIds = kMeansHubSelection(nodes, k);
+    int k = 10; // Number of hubs you want
+    vector<int> hubIds = kMeansHubSelection(cities, k);
 
     cout << "Selected Hubs:\n";
     for (int id : hubIds) {
