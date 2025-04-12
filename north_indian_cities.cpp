@@ -12,6 +12,7 @@ struct City {
     int id;
     string name;
     int x, y;
+    City(){}
 
     City(int id, const string& name, int x, int y)
         : id(id), name(name), x(x), y(y) {}
@@ -106,9 +107,33 @@ vector<vector<City>> kMeansClustering(const vector<City>& cities, int k, double&
     return clusters;
 }
 
+City findHubs(vector<City>& clusterCities,vector<vector<double>>& adjMatrix) {
+    City bestHub;
+    double minTotalDist = 1e9;
+    for (City city : clusterCities) {
+        double totalDist = 0.0;
+
+        for (City other : clusterCities) {
+            if (city.id != other.id) {
+                totalDist += adjMatrix[city.id-1][other.id-1];
+            }
+        }
+
+        if (totalDist < minTotalDist) {
+            minTotalDist = totalDist;
+            bestHub = city;
+        }
+
+    }
+    return bestHub;
+
+
+}
+
+
 
 int main() {
-    
+
     vector<City> cities = {
         {1, "Delhi", 700, 220},
     {2, "Amritsar", 640, 130},
@@ -161,7 +186,7 @@ int main() {
         {49, "Farukhabad", 755, 360}
     };
 
-    
+
     vector<vector<double>> adj_matrix = {
     {0.00, 0.00, 99.01, 0.00, 130.65, 0.00, 0.00, 0.00, 0.00, 0.00, 263.23, 0.00, 0.00, 78.27, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 152.16, 139.56, 0.00, 0.00, 0.00, 73.54, 0.00, 0.00, 0.00, 58.14, 117.72, 0.00, 0.00, 81.44, 0.00, 0.00, 0.00, 6.50, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 19.50, 195.54},
     {0.00, 0.00, 0.00, 0.00, 255.41, 276.77, 192.49, 0.00, 187.49, 181.07, 401.32, 0.00, 0.00, 0.00, 0.00, 0.00, 72.67, 0.00, 32.50, 0.00, 14.53, 23.44, 36.77, 0.00, 26.00, 0.00, 43.60, 70.01, 53.60, 166.10, 0.00, 198.44, 0.00, 0.00, 158.29, 0.00, 0.00, 0.00, 0.00, 135.26, 26.00, 0.00, 0.00, 43.60, 0.00, 0.00, 138.19, 0.00, 0.00},
@@ -213,19 +238,27 @@ int main() {
     {19.50, 0.00, 0.00, 0.00, 0.00, 164.44, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 70.31, 0.00, 0.00, 0.00, 74.11, 0.00, 0.00, 0.00, 149.64, 0.00, 0.00, 195.00, 0.00, 0.00, 29.07, 0.00, 0.00, 0.00, 18.38, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 140.62, 115.00, 0.00, 0.00, 0.00, 0.00},
     {195.54, 0.00, 0.00, 201.92, 0.00, 0.00, 0.00, 0.00, 150.06, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 261.62, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 334.61, 0.00, 0.00, 0.00, 0.00, 282.21, 0.00, 178.84, 137.73, 0.00, 181.07, 178.48, 0.00, 0.00, 189.28, 0.00, 0.00, 311.25, 331.50, 328.94, 0.00, 293.65, 0.00, 203.59, 0.00, 0.00},
 };
-    
+
     int k = 10;
     double wcss = 0;
     auto clusters = kMeansClustering(cities, k, wcss);
+    vector<City>hubs;
+    for(auto cluster:clusters)
+    {
+        hubs.push_back(findHubs(cluster,adj_matrix));
+    }
 
     for (int i = 0; i < clusters.size(); ++i) {
         cout << "Cluster " << i + 1 << ":\n";
         for (const City& c : clusters[i]) {
             cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
         }
+        cout<<"Hub:"<<hubs[i].name<<endl;
         cout << "\n";
     }
 
     cout << "Total WCSS: " << wcss << endl;
+
+
     return 0;
 }
