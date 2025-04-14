@@ -47,6 +47,65 @@ public:
     }
 };
 
+class HubToHubCarrier {
+public:
+    int carrierId;
+    int fromHubId;
+    int toHubId;
+
+    double maxWeight;
+    double maxVolume;
+    double remainingWeight;
+    double remainingVolume;
+    double speed;
+
+    vector<Order> assignedOrders;
+
+    HubToHubCarrier(int id, int fromHub, int toHub, double capWeight = 500.0, double capVolume = 50.0, double spd = 60.0)
+        : carrierId(id), fromHubId(fromHub), toHubId(toHub),
+          maxWeight(capWeight), maxVolume(capVolume),
+          remainingWeight(capWeight), remainingVolume(capVolume),
+          speed(spd) {}
+
+    bool canCarry(const Order& o) const {
+        return o.sourceHubId == fromHubId &&
+               o.destinationHubId == toHubId &&
+               o.weight <= remainingWeight &&
+               o.volume <= remainingVolume;
+    }
+
+    void assignOrder(const Order& o) {
+        assignedOrders.push_back(o);
+        remainingWeight -= o.weight;
+        remainingVolume -= o.volume;
+    }
+};
+
+void assignHubToHubOrders(
+    vector<Order>& hubOrders,  // orders that are ready at source hub
+    vector<HubToHubCarrier>& carriers
+) {
+    for (const auto& order : hubOrders) {
+        bool assigned = false;
+
+        for (auto& carrier : carriers) {
+            if (carrier.canCarry(order)) {
+                carrier.assignOrder(order);
+                cout << "Assigned Order " << order.orderId
+                     << " from Hub " << carrier.fromHubId
+                     << " to Hub " << carrier.toHubId
+                     << " via Carrier " << carrier.carrierId << "\n";
+                assigned = true;
+                break;
+            }
+        }
+
+        if (!assigned) {
+            cout << "Order " << order.orderId << " could not be assigned to any inter-hub carrier.\n";
+        }
+    }
+}
+
 class HubSpokeCarrier {
 public:
     int carrierId;
@@ -100,6 +159,7 @@ void assignOrdersForSeller(
         }
     }
 }
+
 
 double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
