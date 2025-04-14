@@ -47,7 +47,53 @@ public:
     }
 };
 
+class HubSpokeCarrier {
+public:
+    int carrierId;
+    double maxWeight = 100.0;   // fixed for all
+    double maxVolume = 10.0;    // fixed for all
+    double speed = 40.0;        // km/h or any unit, same across all
+    int hubLocationId;
 
+    vector<Order> assignedOrders;
+
+    HubSpokeCarrier(int id, int hubLoc)
+        : carrierId(id), hubLocationId(hubLoc) {}
+
+    bool canCarry(const Order& o, double currentWeight, double currentVolume) {
+        return (currentWeight + o.weight <= maxWeight) &&
+               (currentVolume + o.volume <= maxVolume);
+    }
+
+    void assignOrder(const Order& o) {
+        assignedOrders.push_back(o);
+    }
+
+};
+
+void assignOrdersToHubSpokeCarriers(
+    vector<HubSpokeCarrier>& carriers,
+    const vector<Order>& orders,
+    const vector<Seller>& sellers,
+    const vector<vector<double>>& distBtwCities)  // Floyd-Warshall matrix
+{
+    for (const auto& order : orders) {
+        const auto& seller = sellers[order.sellerId - 1];  // get seller info
+        for (auto& carrier : carriers) {
+            double currentW = 0, currentV = 0;
+            for (const auto& o: carrier.assignedOrders) {
+                currentW += o.weight;
+                currentV += o.volume;
+            }
+
+            if (carrier.canCarry(order, currentW, currentV)) {
+                carrier.assignOrder(order);
+                break;  // assigned to one carrier
+            }
+        }
+    }
+}
+ 
 
 double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
