@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#define cost 1
 
 using namespace std;
 
@@ -139,6 +140,7 @@ public:
 
 unordered_map<pair<int,int>,HubSpokeCarrier>locToHSCarrier;
 unordered_map<pair<int,int>,HubHubCarrier>locToHHCarrier;
+vector<vector<double>> distBtwCities;
     
 pair<int,double> assignOrderSpokeHub(int src,int dest,Order order) {
     double dist=;
@@ -454,7 +456,7 @@ int main() {
     {19.50, 0.00, 0.00, 0.00, 0.00, 164.44, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 70.31, 0.00, 0.00, 0.00, 74.11, 0.00, 0.00, 0.00, 149.64, 0.00, 0.00, 195.00, 0.00, 0.00, 29.07, 0.00, 0.00, 0.00, 18.38, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 140.62, 115.00, 0.00, 0.00, 0.00, 0.00},
     {195.54, 0.00, 0.00, 201.92, 0.00, 0.00, 0.00, 0.00, 150.06, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 261.62, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 334.61, 0.00, 0.00, 0.00, 0.00, 282.21, 0.00, 178.84, 137.73, 0.00, 181.07, 178.48, 0.00, 0.00, 189.28, 0.00, 0.00, 311.25, 331.50, 328.94, 0.00, 293.65, 0.00, 203.59, 0.00, 0.00},
 };
-    vector<vector<double>> distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
+    distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
     int k = 10;
     double wcss = 0;
