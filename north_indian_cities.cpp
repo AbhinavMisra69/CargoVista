@@ -18,6 +18,39 @@ struct City {
         : id(id), name(name), x(x), y(y) {}
 };
 
+using namespace std;
+
+class Order {
+public:
+    int orderId;
+    int sellerId;
+    pair<double, double> deliveryLocation;
+    double weight;
+    double volume;
+  
+    Order(/* constructor params */) {
+        // constructor logic here
+    }
+};
+
+class Seller {
+public:
+    int sellerId;
+    string name;
+    pair<double, double> location;
+    vector<Order> orders;
+
+    Seller(/* constructor params */) {
+        // constructor logic here
+    }
+
+    void addOrder(const Order& o) {
+        orders.push_back(o);
+    }
+};
+
+
+
 double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
