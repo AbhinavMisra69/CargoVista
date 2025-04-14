@@ -37,7 +37,7 @@ class Seller {
 public:
     int sellerId;
     string name;
-    pair<double, double> location;
+    string location;
     vector<Order> orders;
 
     Seller(/* constructor params */) {
