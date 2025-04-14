@@ -24,23 +24,23 @@ class Order {
 public:
     int orderId;
     int sellerId;
-    pair<double, double> deliveryLocation;
+    int source;
+    int destination;
     double weight;
     double volume;
   
-    Order(int id, int sId, pair<double, double> loc, double w, double v)
-        : orderId(id), sellerId(sId), deliveryLocation(loc), weight(w), volume(v) {}
+    Order(int id, int sId,int src, int des, double w, double v)
+        : orderId(id), sellerId(sId),source(src), destination(loc), weight(w), volume(v) {}
 };
 
 class Seller {
 public:
     int sellerId;
-    string name;
-    string location;
+    int location;
     vector<Order> orders;
 
-     Seller(int id, string n, pair<double, double> loc)
-        : sellerId(id), name(n), location(loc) {}
+     Seller(int id, int loc)
+        : sellerId(id), location(loc) {}
 
     void addOrder(const Order& o) {
         orders.push_back(o);
