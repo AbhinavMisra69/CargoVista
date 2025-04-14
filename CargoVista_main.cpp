@@ -71,25 +71,32 @@ public:
 
 };
 
-void assignOrdersToHubSpokeCarriers(
-    vector<HubSpokeCarrier>& carriers,
-    const vector<Order>& orders,
-    const vector<Seller>& sellers,
-    const vector<vector<double>>& distBtwCities)  // Floyd-Warshall matrix
-{
-    for (const auto& order : orders) {
-        const auto& seller = sellers[order.sellerId - 1];  // get seller info
+void assignOrdersForSeller(
+    Seller& seller,
+    vector<HubSpokeCarrier>& carriers
+) {
+    for (auto& order: seller.orders) {
+        bool assigned = false;
+
         for (auto& carrier : carriers) {
-            double currentW = 0, currentV = 0;
-            for (const auto& o: carrier.assignedOrders) {
-                currentW += o.weight;
-                currentV += o.volume;
+            double currentWeight = 0, currentVolume = 0;
+
+            for (const auto& o : carrier.assignedOrders) {
+                currentWeight += o.weight;
+                currentVolume += o.volume;
             }
 
-            if (carrier.canCarry(order, currentW, currentV)) {
+            if (carrier.canCarry(order, currentWeight, currentVolume)) {
                 carrier.assignOrder(order);
-                break;  // assigned to one carrier
+                cout << "Assigned Order " << order.orderId
+                     << " to Carrier " << carrier.carrierId << endl;
+                assigned = true;
+                break;
             }
+        }
+
+        if (!assigned) {
+            cout << "Order " << order.orderId << " could not be assigned (capacity full)." << endl;
         }
     }
 }
