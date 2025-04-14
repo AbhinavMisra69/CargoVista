@@ -47,7 +47,7 @@ public:
     }
 };
 
-class HubToHubCarrier {
+class HubHubCarrier {
 public:
     int carrierId;
     int fromHubId;
@@ -61,7 +61,7 @@ public:
 
     vector<Order> assignedOrders;
 
-    HubToHubCarrier(int id, int fromHub, int toHub, double capWeight = 500.0, double capVolume = 50.0, double spd = 60.0)
+    HubHubCarrier(int id, int fromHub, int toHub, double capWeight = 500.0, double capVolume = 50.0, double spd = 60.0)
         : carrierId(id), fromHubId(fromHub), toHubId(toHub),
           maxWeight(capWeight), maxVolume(capVolume),
           remainingWeight(capWeight), remainingVolume(capVolume),
@@ -116,8 +116,8 @@ public:
 
     double remainingWeight;
     double remainingVolume;
-
-    vector<Order> assignedOrders;
+    vector<Order>assignedOrders;
+    list<Order>pendingOrders;
 
     HubSpokeCarrier(int id, int hubLoc, double capWeight = 100.0, double capVolume = 10.0, double spd = 40.0)
         : carrierId(id), hubLocationId(hubLoc), maxWeight(capWeight), maxVolume(capVolume), speed(spd),
@@ -132,7 +132,32 @@ public:
         remainingWeight -= o.weight;
         remainingVolume -= o.volume;
     }
+    void assignPendingOrder(const Order& o) {
+        pendingOrders.push_back(o);
+    }
 };
+
+unordered_map<pair<int,int>,HubSpokeCarrier>locToHSCarrier;
+unordered_map<pair<int,int>,HubHubCarrier>locToHHCarrier;
+    
+pair<int,double> assignOrderSpokeHub(int src,int dest,Order order) {
+    double dist=;
+    HubSpokeCarrier=locToHSCarrier[{src,dest}];
+    if (HubSpokeCarrier.canCarry(order)) 
+    {
+        carrier.assignOrder(order);
+        cout << "Assigned Order " << order.orderId
+             << " (W: " << order.weight << ", V: " << order.volume << ") "
+             << "to Carrier " << carrier.carrierId
+             << " [Remaining W: " << carrier.remainingWeight 
+             << ", V: " << carrier.remainingVolume << "]\n";
+    }
+    else
+    {
+        cout << "Order " << order.orderId << " could not be assigned (carrier capacity full).\n";
+        carrier.pendingOrders(order);
+    }
+}
 
 void assignOrdersForSeller(
     Seller& seller,
@@ -274,6 +299,32 @@ City findHubs(vector<City>& clusterCities,vector<vector<double>>& adjMatrix) {
 
 }
 
+void processOrder(Order& order)
+{
+    int srcHub=spokeToHub[order.source];
+    int destHub=spokeToHub[order.destination];
+    int time=0;
+    double cost=0;
+    pair<int,int>timeNdCost;
+    if(source!=srcHub)
+    {
+        timeNdCost=assignOrderSpokeHub(source,srcHub,order)
+        time+=timeNdCost.first;
+        cost+=timeNdCost.second();
+    }
+    timeNdCost=assignOrderHubHub(srcHub,destHub,order);
+    time+=timeNdCost.first;
+    cost+=timeNdCost.second();
+    if(destination!=destHub)
+    {
+        timeNdCost=assignOrderSpokeHub(destHub,destination,order);
+        time+=timeNdCost.first;
+        cost+=timeNdCost.second();
+    }
+    cout<<"For order id:"<<order.id<<endl;
+    cout<<"Total time:"<<time<<"days"<<endl<<"total cost:"<<cost<<endl;
+}
+
 vector<Order> generateRandomOrders(int numOrders, int sellerIdStart = 1) {
     vector<Order> orders;
     random_device rd;
@@ -413,16 +464,44 @@ int main() {
     {
         hubs.push_back(findHubs(cluster,distBtwCities));
     }
+    unordered_map<int,int>spokeToHub;
 
     for (int i = 0; i < clusters.size(); ++i) {
         cout << "Cluster " << i + 1 << ":\n";
         for (const City& c : clusters[i]) {
             cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
+            spokeToHub[c.id]=hubs[i].id;
         }
         cout<<"Hub:"<<hubs[i].name<<endl;
         cout << "\n";
     }
-
+/*HubHubCarrier(int id, int fromHub, int toHub, double capWeight = 500.0, double capVolume = 50.0, double spd = 60.0)
+        : carrierId(id), fromHubId(fromHub), toHubId(toHub),
+          maxWeight(capWeight), maxVolume(capVolume),
+          remainingWeight(capWeight), remainingVolume(capVolume),
+          speed(spd) {}
+          
+//HubSpokeCarrier(int id, int hubLoc, double capWeight = 100.0, double capVolume = 10.0, double spd = 40.0)
+        : carrierId(id), hubLocationId(hubLoc), maxWeight(capWeight), maxVolume(capVolume), speed(spd),
+          remainingWeight(capWeight), remainingVolume(capVolume) {}
+*/
+    int cnt1=1,cnt2=1;
+    for(int i=1;i<=49;i++)
+    {
+        for(int j=i+1;j<=49;j++)
+        {
+            if(spokeToHub[i]!=i)
+            {
+                locToHSCarrier[{i,spokeToHub[i]}]=new HubSpokeCarrier(cnt1++,i);
+                break;
+            }
+            else if(spoketoHub[j]==j)
+            {
+                locToHHCarrier[{i,j}]=new HubHubCarrier(cnt2++,i,j);
+            }
+        }
+    }
+    
     cout << "Total WCSS: " << wcss << endl;
 
     random_device rd;
