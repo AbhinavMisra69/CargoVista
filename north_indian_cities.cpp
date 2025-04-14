@@ -28,9 +28,8 @@ public:
     double weight;
     double volume;
   
-    Order(/* constructor params */) {
-        // constructor logic here
-    }
+    Order(int id, int sId, pair<double, double> loc, double w, double v)
+        : orderId(id), sellerId(sId), deliveryLocation(loc), weight(w), volume(v) {}
 };
 
 class Seller {
@@ -40,9 +39,8 @@ public:
     string location;
     vector<Order> orders;
 
-    Seller(/* constructor params */) {
-        // constructor logic here
-    }
+     Seller(int id, string n, pair<double, double> loc)
+        : sellerId(id), name(n), location(loc) {}
 
     void addOrder(const Order& o) {
         orders.push_back(o);
@@ -164,6 +162,27 @@ City findHubs(vector<City>& clusterCities,vector<vector<double>>& adjMatrix) {
 
 }
 
+vector<Order> generateRandomOrders(int numOrders, int sellerIdStart = 1) {
+    vector<Order> orders;
+    random_device rd;
+    mt19937 gen(rd());
+    
+    uniform_int_distribution<> locationDist(1, 50);     // Location IDs from 1 to 50
+    uniform_real_distribution<> weightDist(1.0, 30.0);  // weight in kg
+    uniform_real_distribution<> volumeDist(0.01, 0.3);  // volume in m^3
+
+    for (int i = 0; i < numOrders; ++i) {
+        int orderId = i + 1;
+        int sellerId = sellerIdStart + (i % 5);  // distribute among 5 sellers
+        int deliveryLocationId = locationDist(gen);
+        double weight = weightDist(gen);
+        double volume = volumeDist(gen);
+
+        orders.emplace_back(orderId, sellerId, deliveryLocationId, weight, volume);
+    }
+
+    return orders;
+}
 
 
 int main() {
@@ -293,6 +312,35 @@ int main() {
     }
 
     cout << "Total WCSS: " << wcss << endl;
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> locationDist(1, 50);
+
+    vector<Seller> sellers;
+
+    // Create 5 sellers with random location IDs
+    for (int i = 1; i <= 5; ++i) {
+        int locId = locationDist(gen);
+        sellers.emplace_back(i, "Seller" + to_string(i), locId);
+    }
+
+    // Generate 30 random orders
+    vector<Order> simulatedOrders = generateRandomOrders(30);
+
+    // Assign orders to sellers
+    for (const auto& order : simulatedOrders) {
+        int index = order.sellerId - 1;
+        if (index >= 0 && index < sellers.size()) {
+            sellers[index].addOrder(order);
+        }
+    }
+
+    // Print sample output
+    for (const auto& seller : sellers) {
+        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.locationId << ") has " << seller.orders.size() << " orders.\n";
+    }
+
 
 
     return 0;
