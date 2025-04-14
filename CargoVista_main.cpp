@@ -50,25 +50,29 @@ public:
 class HubSpokeCarrier {
 public:
     int carrierId;
-    double maxWeight = 100.0;   // fixed for all
-    double maxVolume = 10.0;    // fixed for all
-    double speed = 40.0;        // km/h or any unit, same across all
+    double maxWeight;
+    double maxVolume;
+    double speed;
     int hubLocationId;
+
+    double remainingWeight;
+    double remainingVolume;
 
     vector<Order> assignedOrders;
 
-    HubSpokeCarrier(int id, int hubLoc)
-        : carrierId(id), hubLocationId(hubLoc) {}
+    HubSpokeCarrier(int id, int hubLoc, double capWeight = 100.0, double capVolume = 10.0, double spd = 40.0)
+        : carrierId(id), hubLocationId(hubLoc), maxWeight(capWeight), maxVolume(capVolume), speed(spd),
+          remainingWeight(capWeight), remainingVolume(capVolume) {}
 
-    bool canCarry(const Order& o, double currentWeight, double currentVolume) {
-        return (currentWeight + o.weight <= maxWeight) &&
-               (currentVolume + o.volume <= maxVolume);
+    bool canCarry(const Order& o) const {
+        return (o.weight <= remainingWeight) && (o.volume <= remainingVolume);
     }
 
     void assignOrder(const Order& o) {
         assignedOrders.push_back(o);
+        remainingWeight -= o.weight;
+        remainingVolume -= o.volume;
     }
-
 };
 
 void assignOrdersForSeller(
@@ -79,28 +83,23 @@ void assignOrdersForSeller(
         bool assigned = false;
 
         for (auto& carrier : carriers) {
-            double currentWeight = 0, currentVolume = 0;
-
-            for (const auto& o : carrier.assignedOrders) {
-                currentWeight += o.weight;
-                currentVolume += o.volume;
-            }
-
-            if (carrier.canCarry(order, currentWeight, currentVolume)) {
+            if (carrier.canCarry(order)) {
                 carrier.assignOrder(order);
                 cout << "Assigned Order " << order.orderId
-                     << " to Carrier " << carrier.carrierId << endl;
+                     << " (W: " << order.weight << ", V: " << order.volume << ") "
+                     << "to Carrier " << carrier.carrierId
+                     << " [Remaining W: " << carrier.remainingWeight 
+                     << ", V: " << carrier.remainingVolume << "]\n";
                 assigned = true;
                 break;
             }
         }
 
         if (!assigned) {
-            cout << "Order " << order.orderId << " could not be assigned (capacity full)." << endl;
+            cout << "Order " << order.orderId << " could not be assigned (carrier capacity full).\n";
         }
     }
 }
- 
 
 double euclidean(const City& a, const City& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
