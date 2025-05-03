@@ -112,3 +112,21 @@ vector<Vehicle> SimulatedAnnealingVRP(const vector<Node>& nodes, const vector<in
 
     return best;
 }
+
+
+  vector<int> depotIDs = {0, 1};  // Regional depots
+    int vehiclesPerDepot = 2;
+    int vehicleCapacity = 10;
+
+    vector<Vehicle> solution = SimulatedAnnealingVRP(nodes, depotIDs, vehiclesPerDepot, vehicleCapacity);
+
+    // Print the solution
+    for (int i = 0; i < solution.size(); ++i) {
+        const Vehicle& v = solution[i];
+        cout << "Vehicle " << i << " (Depot " << v.depotID << "): ";
+        cout << v.depotID << " -> ";
+        for (int cust : v.route) {
+            cout << cust << " -> ";
+        }
+        cout << v.depotID << endl;
+    }
