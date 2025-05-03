@@ -130,3 +130,34 @@ vector<Vehicle> SimulatedAnnealingVRP(const vector<Node>& nodes, const vector<in
         }
         cout << v.depotID << endl;
     }
+
+
+
+ vector<Node> nodes;
+    nodes.push_back({0, 0.0, 0.0, 0}); // depot at origin
+
+    // Simulated random coordinates for 50 cities
+    vector<pair<double, double>> cityCoordinates(50);
+    srand(time(0));
+    for (int i = 0; i < 50; ++i) {
+        cityCoordinates[i] = {rand() % 1000, rand() % 1000};
+    }
+
+    // Mapping orders to nodes
+    for (const auto& order : orders) {
+        // Pickup node (positive demand)
+        nodes.push_back({
+            (int)nodes.size(), 
+            cityCoordinates[order.source - 1].first, 
+            cityCoordinates[order.source - 1].second, 
+            (int)order.weight
+        });
+
+        // Delivery node (negative demand)
+        nodes.push_back({
+            (int)nodes.size(), 
+            cityCoordinates[order.destination - 1].first, 
+            cityCoordinates[order.destination - 1].second, 
+            -(int)order.weight
+        });
+    }
