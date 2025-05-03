@@ -25,8 +25,13 @@ struct City {
 struct PPCity {
     int id;
     double demand;
+    double supply;
     PPCity(){}
-    PPCity(int i,double d):id(i),demand(d){};
+    PPCity(int i,double d, double supply = 0):id(i),demand(d){};
+    bool operator==(const PPCity& other) const {
+        return id == other.id && demand == other.demand && supply == other.supply;
+        // Compare all relevant fields
+    }
 };
 
 class Order {
@@ -400,19 +405,18 @@ vector<PPCarrier> CreateInitialSolution(vector<PPCity>& Citys, vector<PPCity>& d
 
     vector<PPCity> customers;
     for (const auto& city : Citys)
-        if (find(depots.begin(), depots.end(), city.id) == depots.end())
+        if (find(depots.begin(), depots.end(), city) == depots.end())
             customers.push_back(city);
 
     vector<PPCarrier> vehicles;
-    int depotIdx = 0;
     for (PPCity d : depots) {
         for (int v = 0; v < vehiclesPerDepot; ++v)
             vehicles.push_back({vehicleCap, 0, d.id, {}});
     }
 
     int vi = 0;
-    for (const auto& cust : customers) {
-        while (vi < vehicles.size() && vehicles[vi].load + cust.demand > vehicleCap)
+    for (auto& cust : customers) {
+        while (vi < vehicles.size() && vehicles[vi].load + cust.supply > vehicleCap)
             vi++;
         if (vi >= vehicles.size()) break;
 
@@ -696,20 +700,20 @@ int main() {
     for (auto& order : simulatedOrders) {
         // Pickup node (positive demand)
         nodes.push_back({
-            order.source,
+            order.source,0,
             order.weight
         });
 
         // Delivery node (negative demand)
         nodes.push_back({
             order.destination,
-            -order.weight
+            order.weight
         });
     }
     int vehiclesPerDepot = 2;
     double vehicleCapacity = 6000;
 
-    vector<PPCarrier> solution = SimulatedAnnealingVRP(cities, hubs, vehiclesPerDepot, vehicleCapacity);
+    vector<PPCarrier> solution = SimulatedAnnealingVRP(nodes, depots, vehiclesPerDepot, vehicleCapacity);
 
     // Print the solution
     for (int i = 0; i < solution.size(); ++i) {
