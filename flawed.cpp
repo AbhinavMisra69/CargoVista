@@ -351,25 +351,26 @@ vector<Order> generateRandomOrders(int numOrders, int sellerIdStart = 1) {
     vector<Order> orders;
     random_device rd;
     mt19937 gen(rd());
+uniform_int_distribution<> locationDist(1, 50);     // Location IDs from 1 to 50
+uniform_real_distribution<> weightDist(50.0, 300.0);  // weight in kg
+uniform_real_distribution<> volumeDist(1.0, 3.0);     // volume in m^3
 
-    uniform_int_distribution<> locationDist(1, 49);     // Location IDs from 1 to 50
-    uniform_real_distribution<> weightDist(50.0, 300.0);  // weight in kg
-    uniform_real_distribution<> volumeDist(1.0, 3.0);  // volume in m^3
-    int deliveryLocationId=0,deliverySrc=0;
-    for (int i = 0; i < numOrders; ++i) {
-        int sellerId = sellerIdStart + (i % 5);  // distribute among 5 sellers
-        while(deliveryLocationId==deliverySrc)
-        {
-            deliveryLocationId = locationDist(gen);
-            deliverySrc=locationDist(gen);
-        }
-        double weight = weightDist(gen);
-        double volume = volumeDist(gen);
+for (int i = 0; i < numOrders; ++i) {
+    int sellerId = sellerIdStart + (i % 5);  // distribute among 5 sellers
 
-        orders.push_back(*(new Order(sellerId,deliverySrc,deliveryLocationId, weight, volume)));
+    int pickup = locationDist(gen);
+    int delivery = locationDist(gen);
+    while (delivery == pickup) {
+        delivery = locationDist(gen);  // Only re-roll delivery if it's same as pickup
     }
 
-    return orders;
+    double weight = weightDist(gen);
+    double volume = volumeDist(gen);
+
+    orders.emplace_back(sellerId, pickup, delivery, weight, volume);
+}
+
+return orders;
 }
 
 
