@@ -489,38 +489,39 @@ void SwapOrders(vector<PPCarrier>& vehicles, const vector<pair<int, int>>& pdPai
     while (maxAttempts--) {
         int v1 = rand() % vehicles.size();
         int v2 = rand() % vehicles.size();
-        if (vehicles[v1].route.size() ==0  || vehicles[v2].route.size() == 0) continue;
+        if (vehicles[v1].route.empty() || vehicles[v2].route.empty()) continue;
+       int i = rand() % pdPairs.size();
+    int j = rand() % pdPairs.size();
+    if (i == j) continue;
 
-        int i = rand() % pdPairs.size();
-        int pid1 = pdPairs[i].first;
-        int did1 = pdPairs[i].second;
+    int pid1 = pdPairs[i].first, did1 = pdPairs[i].second;
+    int pid2 = pdPairs[j].first, did2 = pdPairs[j].second;
 
-        int j = rand() % pdPairs.size();
-        if (i == j) continue; // Avoid self-swap
+    auto& r1 = vehicles[v1].route;
+    auto& r2 = vehicles[v2].route;
 
-        int pid2 = pdPairs[j].first;
-        int did2 = pdPairs[j].second;
+    // Check existence
+    bool r1_has_pair1 = find(r1.begin(), r1.end(), pid1) != r1.end() &&
+                        find(r1.begin(), r1.end(), did1) != r1.end();
+    bool r2_has_pair2 = find(r2.begin(), r2.end(), pid2) != r2.end() &&
+                        find(r2.begin(), r2.end(), did2) != r2.end();
+    if (!r1_has_pair1 || !r2_has_pair2) continue;
 
-        auto& r1 = vehicles[v1].route;
-        auto& r2 = vehicles[v2].route;
+    // Safe swap
+    r1.erase(remove(r1.begin(), r1.end(), pid1), r1.end());
+    r1.erase(remove(r1.begin(), r1.end(), did1), r1.end());
 
-        // Remove both pid1, did1 from r1
-        r1.erase(remove(r1.begin(), r1.end(), pid1), r1.end());
-        r1.erase(remove(r1.begin(), r1.end(), did1), r1.end());
+    r2.erase(remove(r2.begin(), r2.end(), pid2), r2.end());
+    r2.erase(remove(r2.begin(), r2.end(), did2), r2.end());
 
-        // Remove both pid2, did2 from r2
-        r2.erase(remove(r2.begin(), r2.end(), pid2), r2.end());
-        r2.erase(remove(r2.begin(), r2.end(), did2), r2.end());
+    r1.push_back(pid2);
+    r1.push_back(did2);
 
-        // Insert the new orders at the end
-        r1.push_back(pid2);
-        r1.push_back(did2);
+    r2.push_back(pid1);
+    r2.push_back(did1);
 
-        r2.push_back(pid1);
-        r2.push_back(did1);
-
-        return;
-    }
+    return;
+}
 }
 
 vector<PPCarrier> SimulatedAnnealingVRP(vector<PPCity>& nodes, vector<pair<int,int>>& pdPairs, vector<PPCity> depots, int vehiclesPerDepot) {
