@@ -22,7 +22,18 @@ struct City {
         : id(id), name(name), x(x), y(y) {}
 };
 
-using namespace std;
+struct PPCity {
+    int id;
+    double demand;
+    double supply;
+    int orderId = -1;
+    bool isPickup = false;
+    PPCity() {}
+    PPCity(int i, double d, double s = 0, int oid = -1, bool pickup = false) : id(i), demand(d), supply(s), orderId(oid), isPickup(pickup) {}
+    bool operator==(const PPCity& other) const {
+        return id == other.id && demand == other.demand && supply == other.supply;
+    }
+};
 
 class Order {
 public:
@@ -36,10 +47,10 @@ public:
 
     Order(int sId,int src, int des, double w, double v):sellerId(sId),source(src), destination(des), weight(w), volume(v)
     {
-        int n=0;
         orderId=++n;
     }
 };
+int Order::n = 0;
 
 
 class Seller {
@@ -89,8 +100,8 @@ public:
           speed(spd) {}
 
     bool canCarry(const Order& o) const {
-        return o.source == fromHubId &&
-               o.destination == toHubId &&
+        return /*o.source == fromHubId &&
+               o.destination == toHubId &&*/
                o.weight <= remainingWeight &&
                o.volume <= remainingVolume;
     }
@@ -342,25 +353,238 @@ vector<Order> generateRandomOrders(int numOrders, int sellerIdStart = 1) {
     mt19937 gen(rd());
 
     uniform_int_distribution<> locationDist(1, 49);     // Location IDs from 1 to 50
-    uniform_real_distribution<> weightDist(50.0, 300.0);  // weight in kg
-    uniform_real_distribution<> volumeDist(1.0, 3.0);  // volume in m^3
-    int deliveryLocationId=0,deliverySrc=0;
+    uniform_real_distribution<> weightDist(300.0, 1000.0);  // weight in kg
+    uniform_real_distribution<> volumeDist(1.0, 3.0);     // volume in m^3
+
     for (int i = 0; i < numOrders; ++i) {
         int sellerId = sellerIdStart + (i % 5);  // distribute among 5 sellers
-        while(deliveryLocationId==deliverySrc)
-        {
-            deliveryLocationId = locationDist(gen);
-            deliverySrc=locationDist(gen);
+
+        int pickup = locationDist(gen);
+        int delivery = locationDist(gen);
+        while (delivery == pickup) {
+            delivery = locationDist(gen);  // Only re-roll delivery if it's same as pickup
         }
+
         double weight = weightDist(gen);
         double volume = volumeDist(gen);
 
-        orders.push_back(*(new Order(sellerId,deliverySrc,deliveryLocationId, weight, volume)));
+        orders.push_back(*new Order(sellerId, pickup, delivery, weight, volume));
+        cout<<"sid:"<<sellerId<<" "<<"oickup:"<<pickup<<" "<<"delivery"<<delivery<<" \n";
     }
 
-    return orders;
+return orders;
 }
 
+
+
+struct PPCarrier {
+    double capacity = 6000;
+    double load = 0;
+    int depotID;
+    vector<int> route; // sequence of PPCity indices
+};
+
+
+double RouteCost(const vector<int>& route, const vector<PPCity>& nodes, const PPCity& depot) {
+    if (route.empty()) return 0;
+    double cost = 0.0;
+    cost += distBtwCities[depot.id-1][nodes[route.front()].id-1];
+    for (int i = 0; i < route.size() - 1; ++i)
+        cost += distBtwCities[nodes[route[i]].id-1][nodes[route[i+1]].id-1];
+    cost += distBtwCities[nodes[route.back()].id-1][depot.id-1];
+    return cost;
+}
+
+double TotalCost(const vector<PPCarrier>& vehicles, const vector<PPCity>& nodes, const unordered_map<int, PPCity>& depotMap) {
+    double total = 0.0;
+    for (const auto& v : vehicles)
+        total += RouteCost(v.route, nodes, depotMap.at(v.depotID));
+    return total;
+}
+vector<PPCarrier> CreateInitialSolution(const vector<PPCity>& nodes,
+                                        const vector<pair<int, int>>& pdPairs,
+                                        const vector<PPCity>& depots,
+                                        int vehiclesPerDepot) {
+    unordered_map<int, PPCity> depotMap;
+    for (const auto& d : depots)
+        depotMap[d.id] = d;
+
+    vector<PPCarrier> vehicles;
+    unordered_map<int, vector<int>> depotToVehicleIndices;
+
+    // Create vehicles per depot and record their indices
+    for (const auto& depot : depots) {
+        for (int i = 0; i < vehiclesPerDepot; ++i) {
+            PPCarrier v;
+            v.capacity = 5000;
+            v.load = 0;
+            v.depotID = depot.id;
+            vehicles.push_back(v);
+            depotToVehicleIndices[depot.id].push_back(vehicles.size() - 1);
+        }
+    }
+    vector<pair<double, int>> depotDistances;
+    unordered_set<int> assignedOrders;
+
+    for (const auto& pair : pdPairs) {
+        int pid = pair.first;
+        int did = pair.second;
+        int orderId = nodes[pid].orderId;
+        if (assignedOrders.count(orderId)) continue;
+
+        double weight = nodes[pid].supply;
+        bool assigned = false;
+
+        // Step 1: sort depots by distance to pickup point
+
+        for (const auto& depot : depots) {
+            double d = distBtwCities[depot.id - 1][nodes[pid].id - 1];
+            depotDistances.emplace_back(d, depot.id);
+        }
+        sort(depotDistances.begin(), depotDistances.end());
+
+        // Step 2: for each depot (closest first), try assigning to a vehicle under that depot
+        for (auto [_, depotID] : depotDistances) {
+            for (int vidx : depotToVehicleIndices[depotID]) {
+                PPCarrier& v = vehicles[vidx];
+                if (v.load + weight <= v.capacity) {
+                    v.route.push_back(pid);
+                    v.route.push_back(did);
+                    v.load += weight;
+                    assignedOrders.insert(orderId);
+                    assigned = true;
+                    break;
+                }
+            }
+            if (assigned) break;
+        }
+
+        if (!assigned) {
+            cerr << "Warning: Order " << orderId << " could not be assigned to any vehicle.\n";
+        }
+        depotDistances.clear();
+    }
+
+    return vehicles;
+}
+
+// Validate route constraints: pickup before delivery, capacity not exceeded
+bool IsValidRoute(const vector<int>& route, const vector<PPCity>& nodes, double capacity) {
+    unordered_map<int, bool> pickedUp;
+    double load = 0;
+
+    for (int idx : route) {
+        const PPCity& n = nodes[idx];
+        if (n.isPickup) {
+            load += n.supply;
+            pickedUp[n.orderId] = true;
+        } else {
+            if (!pickedUp[n.orderId]) return false;
+            load -= n.demand;
+        }
+        if (load > capacity) return false;
+    }
+    return true;
+}
+
+// Neighborhood: swap two full order pairs (pickup-delivery pair)
+void SwapOrders(vector<PPCarrier>& vehicles, const vector<pair<int, int>>& pdPairs) {
+    int maxAttempts = 100;
+    while (maxAttempts--) {
+        int v1 = rand() % vehicles.size();
+        int v2 = rand() % vehicles.size();
+        if (vehicles[v1].route.empty() || vehicles[v2].route.empty()) continue;
+       int i = rand() % pdPairs.size();
+    int j = rand() % pdPairs.size();
+    if (i == j) continue;
+
+    int pid1 = pdPairs[i].first, did1 = pdPairs[i].second;
+    int pid2 = pdPairs[j].first, did2 = pdPairs[j].second;
+
+    auto& r1 = vehicles[v1].route;
+    auto& r2 = vehicles[v2].route;
+
+    // Check existence
+    bool r1_has_pair1 = find(r1.begin(), r1.end(), pid1) != r1.end() &&
+                        find(r1.begin(), r1.end(), did1) != r1.end();
+    bool r2_has_pair2 = find(r2.begin(), r2.end(), pid2) != r2.end() &&
+                        find(r2.begin(), r2.end(), did2) != r2.end();
+    if (!r1_has_pair1 || !r2_has_pair2) continue;
+
+    // Safe swap
+    r1.erase(remove(r1.begin(), r1.end(), pid1), r1.end());
+    r1.erase(remove(r1.begin(), r1.end(), did1), r1.end());
+
+    r2.erase(remove(r2.begin(), r2.end(), pid2), r2.end());
+    r2.erase(remove(r2.begin(), r2.end(), did2), r2.end());
+
+    r1.push_back(pid2);
+    r1.push_back(did2);
+
+    r2.push_back(pid1);
+    r2.push_back(did1);
+
+    return;
+}
+}
+
+vector<PPCarrier> SimulatedAnnealingVRP(vector<PPCity>& nodes, vector<pair<int,int>>& pdPairs, vector<PPCity> depots, int vehiclesPerDepot) {
+    unordered_map<int, PPCity> depotMap;
+    for (auto& d : depots)
+        depotMap[d.id] = d;
+
+    vector<PPCarrier> current = CreateInitialSolution(nodes, pdPairs, depots, vehiclesPerDepot);
+    for(auto v:current){
+        for(auto r:v.route)
+            cout<<r<<" ";
+        cout<<endl;
+    }
+    vector<PPCarrier> best = current;
+    double bestCost = TotalCost(best, nodes, depotMap);
+    double temp = 1000.0, cooling = 0.995;
+    int maxIter = 10000;
+
+    srand(time(0));
+
+    for (int iter = 0; iter < maxIter; ++iter) {
+        vector<PPCarrier> neighbor = current;
+        SwapOrders(neighbor, pdPairs);
+
+        bool valid = true;
+        for (auto& v : neighbor)
+            if (!IsValidRoute(v.route, nodes, v.capacity)) valid = false;
+        if (!valid) continue;
+
+        double newCost = TotalCost(neighbor, nodes, depotMap);
+        double delta = newCost - bestCost;
+
+        if (delta < 0 || ((double)rand() / RAND_MAX) < exp(-delta / temp)) {
+            current = neighbor;
+            if (newCost < bestCost) {
+                best = neighbor;
+                bestCost = newCost;
+            }
+        }
+        temp *= cooling;
+    }
+    return best;
+}
+
+
+struct PersonalCarrier{
+    static int n;
+    int id;
+    int hubId;
+    double capacity;
+    int sellerId;
+    vector<Order> orders;
+    PersonalCarrier(int h,int c=2000,int sid=-1):hubId(h)
+    {
+        id=++n;
+    }
+
+};
+int PersonalCarrier::n=0;
 
 int main() {
 
@@ -541,8 +765,13 @@ int main() {
     for (const auto& seller : sellers) {
         cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << ") has " << seller.orders.size() << " orders.\n";
     }
-
-    for(auto order:simulatedOrders)
+int ch;
+cout<<"Enter ch:";
+cin>>ch;
+switch(ch)
+{
+case 1:
+      for(auto order:simulatedOrders)
     {
         processOrder(order);
     }
@@ -579,5 +808,52 @@ int main() {
     {
         cout<<"invalid seller!";
     }
+    break;
+
+case 2:
+      // Create depot list
+    vector<PPCity> depots;
+    for (City hub : hubs) {
+        depots.push_back(PPCity(hub.id, 0, 0));
+    }
+
+ vector<PPCity> nodes;
+vector<pair<int, int>> pdPairs;
+
+for (auto& order : simulatedOrders) {
+    int pickupIdx = nodes.size();
+    nodes.push_back(PPCity(order.source, 0, order.weight, order.orderId, true));
+
+    int deliveryIdx = nodes.size();
+    nodes.push_back(PPCity(order.destination, order.weight, 0, order.orderId, false));
+
+    pdPairs.push_back({pickupIdx, deliveryIdx});
+    cout<<"order id:"<<order.orderId<<endl;
+    cout<<"source:"<<cities[order.source-1].name<<endl;
+    cout<<"destination:"<<cities[order.destination-1].name<<endl;
+    cout<<endl;
+}
+
+
+    // Simulated Annealing to find the optimal routes
+    int vehiclesPerDepot = 2;
+    vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot);
+
+    // Output the routes
+    for (int v = 0; v < bestSolution.size(); ++v) {
+        cout << "Vehicle " << v << " (Depot " << bestSolution[v].depotID << "): ";
+        for (int i = 0; i < bestSolution[v].route.size(); ++i) {
+            cout << nodes[bestSolution[v].route[i]].id;
+            if (i < bestSolution[v].route.size() - 1)
+                cout << " -> ";
+        }
+        cout << endl;
+    }
+
+case 3:
+
+    break;
+
+}
     return 0;
 }
