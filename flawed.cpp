@@ -385,10 +385,10 @@ struct PPCarrier {
 double RouteCost(const vector<int>& route, const vector<PPCity>& nodes, const PPCity& depot) {
     if (route.empty()) return 0;
     double cost = 0.0;
-    cost += distBtwCities[depot.id][nodes[route.front()].id];
+    cost += distBtwCities[depot.id-1][nodes[route.front()].id-1];
     for (int i = 0; i < route.size() - 1; ++i)
-        cost += distBtwCities[nodes[route[i]].id][nodes[route[i+1]].id];
-    cost += distBtwCities[nodes[route.back()].id][depot.id];
+        cost += distBtwCities[nodes[route[i]].id-1][nodes[route[i+1]].id-1];
+    cost += distBtwCities[nodes[route.back()].id-1][depot.id-1];
     return cost;
 }
 
@@ -420,7 +420,7 @@ vector<PPCarrier> CreateInitialSolution(const vector<PPCity>& nodes,
     }
 
     unordered_set<int> assignedOrders;
-
+    vector<pair<double, int>> vehicleDistances;
     for (const auto& pair : pdPairs) {
         int pid = pair.first;
         int did = pair.second;
@@ -430,17 +430,29 @@ vector<PPCarrier> CreateInitialSolution(const vector<PPCity>& nodes,
 
         double weight = nodes[pid].supply;
 
-        bool assigned = false;
-        for (auto& v : vehicles) {
-            if (v.load + weight <= v.capacity) {
-                v.route.push_back(pid);
-                v.route.push_back(did);
-                v.load += weight;
-                assignedOrders.insert(orderId);
-                assigned = true;
-                break;
-            }
+       bool assigned = false;
+
+    // Sort vehicles by distance from depot to pickup location
+
+    for (int i = 0; i < vehicles.size(); ++i) {
+        double d = distBtwCities[vehicles[i].depotID-1][nodes[pid].id-1];
+        vehicleDistances.emplace_back(d, i);
+    }
+    sort(vehicleDistances.begin(), vehicleDistances.end());
+
+    for (auto [dist, idx] : vehicleDistances) {
+        PPCarrier& v = vehicles[idx];
+        if (v.load + weight <= v.capacity) {
+            v.route.push_back(pid);
+            v.route.push_back(did);
+            v.load += weight;
+            assignedOrders.insert(orderId);
+            assigned = true;
+            break;
         }
+    }
+    vehicleDistances.clear();
+
 
         // Optional: handle unassigned orders (e.g., log them)
         if (!assigned) {
@@ -477,7 +489,7 @@ void SwapOrders(vector<PPCarrier>& vehicles, const vector<pair<int, int>>& pdPai
     while (maxAttempts--) {
         int v1 = rand() % vehicles.size();
         int v2 = rand() % vehicles.size();
-        if (vehicles[v1].route.size() < 2 || vehicles[v2].route.size() < 2) continue;
+        if (vehicles[v1].route.size() ==0  || vehicles[v2].route.size() == 0) continue;
 
         int i = rand() % pdPairs.size();
         int pid1 = pdPairs[i].first;
