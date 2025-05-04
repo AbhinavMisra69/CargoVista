@@ -562,6 +562,104 @@ vector<PPCarrier> SimulatedAnnealingVRP(vector<PPCity>& nodes, vector<pair<int,i
     return best;
 }
 
+struct CarrierRoute {
+    int hubId;
+    vector<int> route; // seller pickup followed by delivery location IDs
+    double totalDistance;
+    double totalWeight;
+};
+
+
+struct CarrierRoute {
+    int hubId;
+    vector<int> route; // seller pickup followed by delivery location IDs
+    double totalDistance;
+    double totalWeight;
+};
+
+double distance(const City& a, const City& b) {
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+}
+
+// Simple TSP: Nearest Neighbor followed by 2-opt
+vector<int> tspRoute(const City& start, const vector<City>& points) {
+    if (points.empty()) return {};
+    vector<int> visited;
+    unordered_set<int> used;
+    City current = start;
+
+    while (visited.size() < points.size()) {
+        double minDist = 1e9;
+        int minIdx = -1;
+        for (int i = 0; i < points.size(); ++i) {
+            if (used.count(points[i].id)) continue;
+            double d = distance(current, points[i]);
+            if (d < minDist) {
+                minDist = d;
+                minIdx = i;
+            }
+        }
+        if (minIdx != -1) {
+            visited.push_back(points[minIdx].id);
+            used.insert(points[minIdx].id);
+            current = points[minIdx];
+        } else break;
+    }
+    return visited;
+}
+
+vector<CarrierRoute> PlanPersonalizedCarrierRoutes(const vector<Order>& orders,
+                                                   const vector<City>& hubs,
+                                                   const unordered_map<int, City>& cityMap,
+                                                   const City& sellerLocation,
+                                                   double vehicleCapacity) {
+    vector<CarrierRoute> routes;
+    vector<Order> sortedOrders = orders;
+    sort(sortedOrders.begin(), sortedOrders.end(), [](const Order& a, const Order& b) {
+        return a.weight > b.weight; // heavier orders first
+    });
+
+    int orderIdx = 0;
+    for (const City& hub : hubs) {
+        while (orderIdx < sortedOrders.size()) {
+            double capacityLeft = vehicleCapacity;
+            vector<Order> assigned;
+            int tempIdx = orderIdx;
+            while (tempIdx < sortedOrders.size() && sortedOrders[tempIdx].weight <= capacityLeft) {
+                assigned.push_back(sortedOrders[tempIdx]);
+                capacityLeft -= sortedOrders[tempIdx].weight;
+                tempIdx++;
+            }
+            if (assigned.empty()) break;
+
+            vector<City> deliveryPoints;
+            for (const Order& o : assigned) {
+                deliveryPoints.push_back(cityMap.at(o.destinationId));
+            }
+            vector<int> deliveryOrder = tspRoute(sellerLocation, deliveryPoints);
+
+            CarrierRoute cr;
+            cr.hubId = hub.id;
+            cr.route.push_back(sellerLocation.id);
+            cr.route.insert(cr.route.end(), deliveryOrder.begin(), deliveryOrder.end());
+            cr.totalWeight = vehicleCapacity - capacityLeft;
+
+            double dist = distance(hub, sellerLocation);
+            City prev = sellerLocation;
+            for (int id : deliveryOrder) {
+                dist += distance(prev, cityMap.at(id));
+                prev = cityMap.at(id);
+            }
+            cr.totalDistance = dist;
+
+            routes.push_back(cr);
+            orderIdx = tempIdx;
+        }
+    }
+    return routes;
+}
+
+
 
 int main() {
 
@@ -822,6 +920,20 @@ for (auto& order : simulatedOrders) {
         }
         cout << endl;
     }
+
+case 3:
+    
+    vector<int> finalRoute = PersonalizedCarrierRouting(nodes, hubs);
+
+// Print the resulting route
+std::cout << "Final Personalized Carrier Route:\n";
+for (int cityIdx : finalRoute) {
+    const PPCity& city = nodes[cityIdx];
+    std::cout << "City ID: " << city.id
+              << (city.isPickup ? " (Pickup)" : " (Delivery)")
+              << " | OrderID: " << city.orderId << "\n";
+}
+break;
 
 }
     return 0;
