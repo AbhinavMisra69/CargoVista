@@ -975,6 +975,9 @@ int main() {
 };
     
      main_menu();
+     orders_preferences_flow();
+     cin.ignore();
+     cin.get();
     
     distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
