@@ -369,7 +369,7 @@ vector<Order> generateRandomOrders(int numOrders, int sellerIdStart = 1) {
         double volume = volumeDist(gen);
 
         orders.push_back(*new Order(sellerId, pickup, delivery, weight, volume));
-        cout<<"sid:"<<sellerId<<" "<<"oickup:"<<pickup<<" "<<"delivery"<<delivery<<" \n";
+        cout<<"sid:"<<sellerId<<" "<<"oickup:"<<pickup<<" "<<"delivery"<<delivery<<" weight:"<<weight<<" volume"<<volume<<" \n";
     }
 
 return orders;
@@ -585,6 +585,92 @@ struct PersonalCarrier{
 
 };
 int PersonalCarrier::n=0;
+
+struct CarrierRoute {
+    int hubId;
+    vector<int> route; // seller pickup followed by delivery location IDs
+    double totalDistance;
+    double totalWeight;
+};
+
+// Simple TSP: Nearest Neighbor followed by 2-opt
+vector<int> tspRoute(const City& start, const vector<City>& points) {
+    if (points.empty()) return {};
+    vector<int> visited;
+    unordered_set<int> used;
+    City current = start;
+
+    while (visited.size() < points.size()) {
+        double minDist = 1e9;
+        int minIdx = -1;
+        for (int i = 0; i < points.size(); ++i) {
+            if (used.count(points[i].id)) continue;
+            double d = distBtwCities[current.id-1][points[i].id-1];
+            if (d < minDist) {
+                minDist = d;
+                minIdx = i;
+            }
+        }
+        if (minIdx != -1) {
+            visited.push_back(points[minIdx].id);
+            used.insert(points[minIdx].id);
+            current = points[minIdx];
+        } else break;
+    }
+    return visited;
+}
+
+vector<CarrierRoute> PlanPersonalizedCarrierRoutes(const vector<Order>& orders,
+                                                   const vector<City>& hubs,
+                                                   const unordered_map<int, City>& cityMap,
+                                                   const City& sellerLocation,
+                                                   double vehicleCapacity) {
+    vector<CarrierRoute> routes;
+    vector<Order> sortedOrders = orders;
+    sort(sortedOrders.begin(), sortedOrders.end(), [](const Order& a, const Order& b) {
+        return a.weight > b.weight; // heavier orders first
+    });
+
+    int orderIdx = 0;
+    for (const City& hub : hubs) {
+        while (orderIdx < sortedOrders.size()) {
+            double capacityLeft = vehicleCapacity;
+            vector<Order> assigned;
+            int tempIdx = orderIdx;
+            while (tempIdx < sortedOrders.size() && sortedOrders[tempIdx].weight <= capacityLeft) {
+                assigned.push_back(sortedOrders[tempIdx]);
+                capacityLeft -= sortedOrders[tempIdx].weight;
+                tempIdx++;
+            }
+            if (assigned.empty()) break;
+
+            vector<City> deliveryPoints;
+            for (const Order& o : assigned) {
+                deliveryPoints.push_back(cityMap.at(o.destination));
+            }
+            vector<int> deliveryOrder = tspRoute(sellerLocation, deliveryPoints);
+
+            CarrierRoute cr;
+            cr.hubId = hub.id;
+            cr.route.push_back(sellerLocation.id);
+            cr.route.insert(cr.route.end(), deliveryOrder.begin(), deliveryOrder.end());
+            cr.totalWeight = vehicleCapacity - capacityLeft;
+
+            double dist = distBtwCities[hub.id-1][sellerLocation.id-1];
+            City prev = sellerLocation;
+            for (int id : deliveryOrder) {
+                dist += distBtwCities[prev][cityMap.at(id)];
+                prev = cityMap.at(id);
+            }
+            cr.totalDistance = dist;
+
+            routes.push_back(cr);
+            orderIdx = tempIdx;
+        }
+    }
+    return routes;
+}
+
 
 int main() {
 
@@ -852,7 +938,17 @@ for (auto& order : simulatedOrders) {
 
 case 3:
 
-    break;
+    vector<int> finalRoute = PersonalizedCarrierRouting(nodes, hubs);
+
+// Print the resulting route
+std::cout << "Final Personalized Carrier Route:\n";
+for (int cityIdx : finalRoute) {
+    const PPCity& city = nodes[cityIdx];
+    std::cout << "City ID: " << city.id
+              << (city.isPickup ? " (Pickup)" : " (Delivery)")
+              << " | OrderID: " << city.orderId << "\n";
+}
+break;
 
 }
     return 0;
