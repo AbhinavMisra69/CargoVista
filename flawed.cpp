@@ -14,6 +14,7 @@ const int w = 10;
 #include <chrono>
 #include <stream>
 #include <algorithm>
+#include <windows.h>
 
 using namespace std;
 using namespace chrono;
@@ -715,64 +716,154 @@ void exitscr()
     exit(0);
 }
 
-void main_menu()
-{
+
+void get_console_size(int &width, int &height) {
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int columns, rows;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    width = columns;
+    height = rows;
+#else
+    width = 80;
+    height = 25;
+#endif
+}
+
+void pause() {
+    cout << "\nPress Enter to continue...";
+    cin.ignore();
+    cin.get();
+}
+
+void orders_preferences_menu() {
+    int choice;
+    do {
+        clear_screen();
+        cout << "\n--- Step 1: Orders & Preferences ---\n";
+        cout << "1. Upload Order Data\n";
+        cout << "2. Set Delivery Priorities\n";
+        cout << "3. Choose Optimization Goal (Cost / Time / Priority)\n";
+        cout << "4. Continue to Simulation\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "\nUploading orders...\n";
+                // Insert logic to upload order data
+                pause();
+                break;
+            case 2:
+                cout << "\nSetting delivery priorities...\n";
+                // Insert logic to set priorities
+                pause();
+                break;
+            case 3:
+                cout << "\nChoosing optimization goal...\n";
+                // Insert logic to choose optimization
+                pause();
+                break;
+            case 4:
+                cout << "\nProceeding to simulation...\n";
+                pause();
+                break;
+            default:
+                cout << "\nInvalid choice. Please try again.\n";
+                pause();
+        }
+    } while (choice != 4);
+}
+
+void simulate_compare_menu() {
     clear_screen();
+    cout << "\n--- Step 2: Simulate & Compare ---\n";
+    cout << "Running All Delivery Models...\n";
+    // Insert logic for running simulations
+    cout << "Generating Route Maps & Delivery Outcomes...\n";
+    // Insert logic for displaying results
+    cout << "Comparing Cost, Time & Efficiency...\n";
+    // Insert comparative logic
+    pause();
+}
 
+void recommendation_menu() {
+    clear_screen();
+    cout << "\n--- Step 3: Recommendation ---\n";
+    cout << "Analyzing preferences and performance...\n";
+    // Insert logic for analyzing and recommending
+    cout << "Suggested Strategy: [e.g., Personalized Carrier]\n";
+    cout << "Summary Report Generated.\n";
+    pause();
+}
 
-    string menu[] = {
-        "+---------------------------------------------+",
-        "|                  Main Menu:                 |",
-        "+---------------------------------------------+",
-        "| 1. Create New Participant                   |",
-        "|                                             |",
-        "| 2. Record New Transaction                   |",
-        "|                                             |",
-        "| 3. Display Participant Details              |",
-        "|                                             |",
-        "| 4. Display Participants Alphabetically      |",
-        "|                                             |",
-        "| 5. Display Transactions                     |",
-        "+---------------------------------------------+"};
+void main_menu() {
+    clear_screen();
+    string roadmap[] = {
+        " CargoVista is a simulation-based logistics tracker and advisor designed to empower sellers with strategic delivery insights. ",
+        " Our platform compares three core delivery models — Hub-and-Spoke, Point-to-Point, and Personalized Carrier — and recommends the best fit for your needs.",
+        " Whether you're aiming to minimize costs, reduce delivery time, or prioritize specific orders, CargoVista simulates all models for you.",
+        " Analyze. Compare. Deliver smarter — every time.",
+        "                                                                                   ",
+        "+---------------------------------------------------------+",
+        "|                 CargoVista Roadmap                     |",
+        "+---------------------------------------------------------+",
+        "| Step 1: Orders & Preferences                           |",
+        "|         Upload orders, set delivery goals              |",
+        "|         - Upload Order Data                            |",
+        "|         - Set Delivery Priorities                      |",
+        "|         - Choose Optimization Goal                     |",
+        "|                                                       |",
+        "| Step 2: Simulate & Compare                             |",
+        "|         Run all delivery models & view outcomes        |",
+        "|                                                       |",
+        "| Step 3: Get Recommendation                             |",
+        "|         Our suggestion for optimal delivery strategy   |",
+        "+---------------------------------------------------------+"
+    };
 
- 
     int console_width, console_height;
     get_console_size(console_width, console_height);
 
-    
-    int menu_height = sizeof(menu) / sizeof(menu[0]);
-    int start_row = (console_height - menu_height) / 2;
-    int start_col = (console_width - menu[0].length()) / 2;
-
+    int roadmap_height = sizeof(roadmap) / sizeof(roadmap[0]);
+    int start_row = (console_height - roadmap_height) / 2;
+    int start_col = (console_width - roadmap[0].length()) / 2;
 
 #ifdef _WIN32
-    COORD coord = {start_col, start_row};
+    COORD coord = {static_cast<SHORT>(start_col), static_cast<SHORT>(start_row)};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 #else
-
-    for (int i = 0; i < start_row; ++i)
-    {
-        cout << endl;
-    }
+    for (int i = 0; i < start_row; ++i) cout << endl;
 #endif
 
-    
-    for (const string &line : menu)
-    {
-
+    for (const string &line : roadmap) {
 #ifdef _WIN32
-        
         cout << line << endl;
 #else
-        
         cout << string(start_col, ' ') << line << endl;
 #endif
     }
+
+    pause();
+    orders_preferences_menu();
+    simulate_compare_menu();
+    recommendation_menu();
+
+    clear_screen();
+    exitscr();
+}
+
+void setConsoleColors() {
+    // Set background to olive green and text to light yellow (beige approximation)
+    system("color 6A"); 
+    // '6' = olive/dark yellow background, 'A' = light green/yellow text
 }
 
 
 int main() {
-
+    setConsoleColors();
     vector<City> cities = {
         {1, "Delhi", 700, 220},
     {2, "Amritsar", 640, 130},
@@ -883,6 +974,9 @@ int main() {
     {19.50, 0.00, 0.00, 0.00, 0.00, 164.44, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 70.31, 0.00, 0.00, 0.00, 74.11, 0.00, 0.00, 0.00, 149.64, 0.00, 0.00, 195.00, 0.00, 0.00, 29.07, 0.00, 0.00, 0.00, 18.38, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 140.62, 115.00, 0.00, 0.00, 0.00, 0.00},
     {195.54, 0.00, 0.00, 201.92, 0.00, 0.00, 0.00, 0.00, 150.06, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 261.62, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 334.61, 0.00, 0.00, 0.00, 0.00, 282.21, 0.00, 178.84, 137.73, 0.00, 181.07, 178.48, 0.00, 0.00, 189.28, 0.00, 0.00, 311.25, 331.50, 328.94, 0.00, 293.65, 0.00, 203.59, 0.00, 0.00},
 };
+    
+     main_menu();
+    
     distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
     int k = 10;
