@@ -738,122 +738,121 @@ void pause() {
     cin.get();
 }
 
-void orders_preferences_menu() {
-    int choice;
-    do {
-        clear_screen();
-        cout << "\n--- Step 1: Orders & Preferences ---\n";
-        cout << "1. Upload Order Data\n";
-        cout << "2. Set Delivery Priorities\n";
-        cout << "3. Choose Optimization Goal (Cost / Time / Priority)\n";
-        cout << "4. Continue to Simulation\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
 
-        switch (choice) {
-            case 1:
-                cout << "\nUploading orders...\n";
-                // Insert logic to upload order data
-                pause();
-                break;
-            case 2:
-                cout << "\nSetting delivery priorities...\n";
-                // Insert logic to set priorities
-                pause();
-                break;
-            case 3:
-                cout << "\nChoosing optimization goal...\n";
-                // Insert logic to choose optimization
-                pause();
-                break;
-            case 4:
-                cout << "\nProceeding to simulation...\n";
-                pause();
-                break;
-            default:
-                cout << "\nInvalid choice. Please try again.\n";
-                pause();
-        }
-    } while (choice != 4);
+// Dummy placeholders for actual logic
+bool uploadOrderData() {
+    cout << "\nUploading order data...\n";
+    return true;
 }
 
-void simulate_compare_menu() {
-    clear_screen();
-    cout << "\n--- Step 2: Simulate & Compare ---\n";
-    cout << "Running All Delivery Models...\n";
-    // Insert logic for running simulations
-    cout << "Generating Route Maps & Delivery Outcomes...\n";
-    // Insert logic for displaying results
-    cout << "Comparing Cost, Time & Efficiency...\n";
-    // Insert comparative logic
-    pause();
+bool setPriorities() {
+    cout << "\nSetting order priorities...\n";
+    return true;
 }
 
-void recommendation_menu() {
-    clear_screen();
-    cout << "\n--- Step 3: Recommendation ---\n";
-    cout << "Analyzing preferences and performance...\n";
-    // Insert logic for analyzing and recommending
-    cout << "Suggested Strategy: [e.g., Personalized Carrier]\n";
-    cout << "Summary Report Generated.\n";
-    pause();
+bool chooseOptimizationGoal() {
+    cout << "\nChoosing optimization goal...\n";
+    return true;
+}
+
+void runSimulation() {
+    cout << "\nRunning simulation using provided preferences...\n";
+    cout << "\nSimulation complete.\n";
+}
+
+void generateRecommendation() {
+    cout << "\nAnalyzing results and generating recommendation...\n";
+    cout << "\nRecommended model: Personalized Carrier (based on your preferences).\n";
+}
+
+void clear_screen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+void center_print(const string& text) {
+    int width = 80;
+    int pad = max((width - (int)text.length()) / 2, 0);
+    cout << string(pad, ' ') << text << endl;
 }
 
 void main_menu() {
     clear_screen();
-    string roadmap[] = {
-        " CargoVista is a simulation-based logistics tracker and advisor designed to empower sellers with strategic delivery insights. ",
-        " Our platform compares three core delivery models — Hub-and-Spoke, Point-to-Point, and Personalized Carrier — and recommends the best fit for your needs.",
-        " Whether you're aiming to minimize costs, reduce delivery time, or prioritize specific orders, CargoVista simulates all models for you.",
-        " Analyze. Compare. Deliver smarter — every time.",
-        "                                                                                   ",
-        "+---------------------------------------------------------+",
-        "|                 CargoVista Roadmap                     |",
-        "+---------------------------------------------------------+",
-        "| Step 1: Orders & Preferences                           |",
-        "|         Upload orders, set delivery goals              |",
-        "|         - Upload Order Data                            |",
-        "|         - Set Delivery Priorities                      |",
-        "|         - Choose Optimization Goal                     |",
-        "|                                                       |",
-        "| Step 2: Simulate & Compare                             |",
-        "|         Run all delivery models & view outcomes        |",
-        "|                                                       |",
-        "| Step 3: Get Recommendation                             |",
-        "|         Our suggestion for optimal delivery strategy   |",
-        "+---------------------------------------------------------+"
-    };
+    center_print("+---------------------------------------------------------+");
+    center_print("|                Welcome to CargoVista                   |");
+    center_print("+---------------------------------------------------------+");
+    center_print(" CargoVista is a simulation-based logistics tracker and   ");
+    center_print(" advisor designed to empower sellers with strategic       ");
+    center_print(" delivery insights. Our platform compares three core       ");
+    center_print(" delivery models — Hub-and-Spoke, Point-to-Point,         ");
+    center_print(" and Personalized Carrier — and recommends the best fit   ");
+    center_print(" for your needs.                                          ");
+    center_print(" Whether you're aiming to minimize costs, reduce delivery ");
+    center_print(" time, or prioritize specific orders, CargoVista simulates");
+    center_print(" all models for you.                                      ");
+    center_print(" Analyze. Compare. Deliver smarter — every time.          ");
+    center_print("                                                         ");
+    center_print("+---------------------------------------------------------+");
+    center_print("|                 CargoVista Roadmap                     |");
+    center_print("+---------------------------------------------------------+");
+    center_print("| Step 1: Orders & Preferences                           |");
+    center_print("|         Upload orders, set delivery goals              |");
+    center_print("|         - Upload Order Data                            |");
+    center_print("|         - Set Delivery Priorities                      |");
+    center_print("|         - Choose Optimization Goal                     |");
+    center_print("|                                                        |");
+    center_print("| Step 2: Simulate & Compare                             |");
+    center_print("|         Run all delivery models & view outcomes        |");
+    center_print("|                                                        |");
+    center_print("| Step 3: Get Recommendation                             |");
+    center_print("|         Our suggestion for optimal delivery strategy   |");
+    center_print("+---------------------------------------------------------+\n");
 
-    int console_width, console_height;
-    get_console_size(console_width, console_height);
-
-    int roadmap_height = sizeof(roadmap) / sizeof(roadmap[0]);
-    int start_row = (console_height - roadmap_height) / 2;
-    int start_col = (console_width - roadmap[0].length()) / 2;
-
-#ifdef _WIN32
-    COORD coord = {static_cast<SHORT>(start_col), static_cast<SHORT>(start_row)};
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-#else
-    for (int i = 0; i < start_row; ++i) cout << endl;
-#endif
-
-    for (const string &line : roadmap) {
-#ifdef _WIN32
-        cout << line << endl;
-#else
-        cout << string(start_col, ' ') << line << endl;
-#endif
-    }
-
-    pause();
-    orders_preferences_menu();
-    simulate_compare_menu();
-    recommendation_menu();
-
-    clear_screen();
-    exitscr();
+    cout << "Press Enter to begin...";
+    cin.ignore();
+    cin.get();
 }
+
+void orders_preferences_flow() {
+    clear_screen();
+    center_print("------------------------------");
+    center_print(" Order Preferences Setup ");
+    center_print("------------------------------\n");
+
+    bool step1 = false, step2 = false, step3 = false;
+
+    do {
+        center_print("Step 1: Upload Order Data");
+        step1 = uploadOrderData();
+        if (!step1) {
+            cout << "\nFailed to upload order data. Try again.\n";
+        }
+    } while (!step1);
+
+    do {
+        center_print("\nStep 2: Set Order Priorities");
+        step2 = setPriorities();
+        if (!step2) {
+            cout << "\nInvalid priority settings. Try again.\n";
+        }
+    } while (!step2);
+
+    do {
+        center_print("\nStep 3: Choose Optimization Goal");
+        step3 = chooseOptimizationGoal();
+        if (!step3) {
+            cout << "\nInvalid selection. Try again.\n";
+        }
+    } while (!step3);
+
+    cout << "\nAll preferences configured.\n";
+    runSimulation();
+    generateRecommendation();
+}
+
 
 void setConsoleColors() {
     // Set background to olive green and text to light yellow (beige approximation)
