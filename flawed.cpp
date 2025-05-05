@@ -16,6 +16,15 @@ const int w = 10;
 #include <algorithm>
 
 using namespace std;
+using namespace chrono;
+
+#ifdef _WIN32
+
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 
 struct City {
     int id;
@@ -590,6 +599,177 @@ struct PersonalCarrier{
 
 };
 int PersonalCarrier::n=0;
+
+void intro()
+{
+    clear_screen();
+    auto start = chrono::high_resolution_clock::now();
+    cout << "\n\n\n\n\n\n"
+         << endl;
+    cout << "                                                                                                                                                                                                     " << endl;                                                                                                                                                     
+    cout << "                                                                                                                                                                                                     " << endl;
+    cout << "    CCCCCCCCCCCCC                                                                                                                            iiii                            tttt                                     " << endl;
+    cout << "  CCC::::::::::::C                                                                                                                          i::::i                        ttt:::t                                    " << endl;
+    cout << "CC:::::::::::::::C                                                                                                                           iiii                         t:::::t                                    " << endl;
+    cout << "C:::::CCCCCCCC::::C                                                                                                                                                       t:::::t                                   " << endl;
+    cout << "C:::::C       CCCCCC      aaaaaaaaaaaaa       rrrrr   rrrrrrrrr          ggggggggg   ggggg     ooooooooooo        vvvvvvv           vvvvvvviiiiiii     ssssssssss   ttttttt:::::ttttttt      aaaaaaaaaaaaa         " << endl;
+    cout << "C:::::C                   a::::::::::::a      r::::rrr:::::::::r        g:::::::::ggg::::g   oo:::::::::::oo       v:::::v         v:::::v i:::::i   ss::::::::::s  t:::::::::::::::::t      a::::::::::::a       " << endl;
+    cout << "C:::::C                  aaaaaaaaa:::::a      r:::::::::::::::::r      g:::::::::::::::::g  o:::::::::::::::o       v:::::v       v:::::v   i::::i ss:::::::::::::s t:::::::::::::::::t      aaaaaaaaa:::::a      " << endl;
+    cout << "C:::::C                           a::::a      rr::::::rrrrr::::::r    g::::::ggggg::::::gg  o:::::ooooo:::::o        v:::::v     v:::::v    i::::i s::::::ssss:::::stttttt:::::::tttttt               a::::a      " << endl;
+    cout << "C:::::C                    aaaaaaa:::::a      r:::::r     r:::::r    g:::::g     g:::::g    o::::o     o::::o         v:::::v   v:::::v     i::::i  s:::::s  ssssss       t:::::t              aaaaaaa:::::a      " << endl;
+    cout << "C:::::C                  aa::::::::::::a      r:::::r     rrrrrrr    g:::::g     g:::::g    o::::o     o::::o          v:::::v v:::::v      i::::i    s::::::s            t:::::t            aa::::::::::::a      " << endl;
+    cout << " C:::::C                a::::aaaa::::::a      r:::::r                g:::::g     g:::::g    o::::o     o::::o           v:::::v:::::v       i::::i       s::::::s         t:::::t           a::::aaaa::::::a     " << endl;
+    cout << "C:::::C       CCCCCC   a::::a    a:::::a      r:::::r                g::::::g    g:::::g    o::::o     o::::o            v:::::::::v        i::::i ssssss   s:::::s       t:::::t    tttttta::::a    a:::::a       " << endl;
+    cout << "C:::::CCCCCCCC::::C    a::::a    a:::::a      r:::::r                g:::::::ggggg:::::g    o:::::ooooo:::::o             v:::::::v        i::::::is:::::ssss::::::s      t::::::tttt:::::ta::::a    a:::::a        " << endl;
+    cout << "CC:::::::::::::::C     a:::::aaaa::::::a      r:::::r                 g::::::::::::::::g    o:::::::::::::::o              v:::::v         i::::::is::::::::::::::s       tt::::::::::::::ta:::::aaaa::::::a         " << endl;
+    cout << " CCC::::::::::::C      a::::::::::aa:::a      r:::::r                  gg::::::::::::::g     oo:::::::::::oo                v:::v          i::::::i s:::::::::::ss          tt:::::::::::tt a::::::::::aa:::a         " << endl;
+    cout << "    CCCCCCCCCCCCC       aaaaaaaaaa  aaaa      rrrrrrr                    gggggggg::::::g       ooooooooooo                   vvv           iiiiiiii  sssssssssss              ttttttttttt    aaaaaaaaaa  aaaa         " << endl;
+    cout << "                                                                                 g:::::g                                                                                                                            " << endl;
+    cout << "                                                                    gggggg       g:::::g                                                                                                                            " << endl;
+    cout << "                                                                    g:::::gg    gg:::::g                                                                                                                            " << endl;
+    cout << "                                                                      g::::::ggg:::::::g                                                                                                                           " << endl;
+    cout << "                                                                        gg:::::::::::::g                                                                                                                            " << endl;
+    cout << "                                                                          ggg::::::ggg                                                                                                                              " << endl;
+    cout << "                                                                             gggggg                                                                                                                                 " << endl;                                                                                                                               " << endl;
+   
+    while (true)
+    {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::seconds>(end - start).count();
+        if (duration >= 5)
+        {
+            clear_screen();
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+}
+
+// EXIT SCREEN
+void exitscr()
+{
+    auto start = chrono::high_resolution_clock::now();
+    cout << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl;
+    cout << "                                          *                                 *                                                    \n";
+    cout << "                                  *     **                                **                                                     \n";
+    cout << "                                 **     **                                **                                                     \n";
+    cout << "                                 **     **                                **                                                     \n";
+    cout << "                               ******** **                                **            **   ****         ****    **   ****     \n";
+    cout << "                              ********  **  ***      ****    ***  ****    **  ***        **    ***  *    * ***  *  **    ***  *  \n";
+    cout << "                                 **     ** * ***    * ***  *  **** **** * ** * ***       **     ****    *   ****   **     ****  \n";
+    cout << "                                 **     ***   ***  *   ****    **   ****  ***   *        **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **   *         **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **  *          **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   ** **          **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   ******         **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **  ***         *********     ******      ******* **  \n";
+    cout << "                                  **    **     **  ***** **    ***   ***  **   *** *        **** ***     ****        *****   **  \n";
+    cout << "                                         **    **   ***   **    ***   ***  **   ***               ***                           \n";
+    cout << "                                               *                                           *****   ***                          \n";
+    cout << "                                              *                                          ********  **                           \n";
+    cout << "                                             *                                          *      ****                              \n";
+    cout << "                                            *                                                                                   \n";
+    cout << "                                                                                                                                \n";
+    cout << "                                 ***                                                                                           \n";
+    cout << "                               ** ***                                                        *                                 \n";
+    cout << "                              **   ***                                                      ***                                \n";
+    cout << "                              **                                                             *                                 \n";
+    cout << "                              **          ****    ***  ****       **   ****        ****                                        \n";
+    cout << "                              ******     * ***  *  **** **** *     **    ***  *   * **** * ***     ***  ****        ****      \n";
+    cout << "                              *****     *   ****    **   ****      **     ****   **  ****   ***     **** **** *    *  ***  *  \n";
+    cout << "                              **       **    **     **             **      **   ****         **      **   ****    *    ****   \n";
+    cout << "                              **       **    **     **             **      **     ***        **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **       ***      **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **         ***    **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **    ****  **    **      **    **    **     **    \n";
+    cout << "                              **        ******      ***             ******* **  * **** *     **      **    **    **     **    \n";
+    cout << "                              **         ****        ***             *****   **    ****      *** *   ***   ***    ********    \n";
+    cout << "                               **                                                             ***     ***   ***     *** ***   \n";
+    cout << "                                                                                                                         ***  \n";
+    cout << "                                                                                                                   ****   *** \n";
+    cout << "                                                                                                                 *******  **  \n";
+    cout << "                                                                                                                *     ****    \n";
+
+    while (true)
+    {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::seconds>(end - start).count();
+        if (duration >= 3)
+        {
+            clear_screen();
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+
+    clear_screen();
+    intro();
+    exit(0);
+}
+
+void main_menu()
+{
+    clear_screen();
+
+
+    string menu[] = {
+        "+---------------------------------------------+",
+        "|                  Main Menu:                 |",
+        "+---------------------------------------------+",
+        "| 1. Create New Participant                   |",
+        "|                                             |",
+        "| 2. Record New Transaction                   |",
+        "|                                             |",
+        "| 3. Display Participant Details              |",
+        "|                                             |",
+        "| 4. Display Participants Alphabetically      |",
+        "|                                             |",
+        "| 5. Display Transactions                     |",
+        "+---------------------------------------------+"};
+
+ 
+    int console_width, console_height;
+    get_console_size(console_width, console_height);
+
+    
+    int menu_height = sizeof(menu) / sizeof(menu[0]);
+    int start_row = (console_height - menu_height) / 2;
+    int start_col = (console_width - menu[0].length()) / 2;
+
+
+#ifdef _WIN32
+    COORD coord = {start_col, start_row};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+#else
+
+    for (int i = 0; i < start_row; ++i)
+    {
+        cout << endl;
+    }
+#endif
+
+    
+    for (const string &line : menu)
+    {
+
+#ifdef _WIN32
+        
+        cout << line << endl;
+#else
+        
+        cout << string(start_col, ' ') << line << endl;
+#endif
+    }
+}
+
 
 int main() {
 
