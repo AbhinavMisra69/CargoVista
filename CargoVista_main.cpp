@@ -1000,7 +1000,7 @@ int main() {
     vector<Order> simulatedOrders = generateRandomOrders(30);
 
     // Assign orders to sellers
-    for (const auto& order : simulatedOrders) {
+    for (auto& order : simulatedOrders) {
         int index = order.sellerId - 1;
         if (index >= 0 && index < sellers.size()) {
             sellers[index].addOrder(order);
@@ -1008,7 +1008,7 @@ int main() {
     }
 
     // Print sample output
-    for (const auto& seller : sellers) {
+    for (auto& seller : sellers) {
         cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
     }
 int cs;
