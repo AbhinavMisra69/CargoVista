@@ -1101,17 +1101,18 @@ else
         cout << "New seller created with ID: " << sid << endl;
     }
     else {
-        while (sid > sellers.size() || sid < 1) {
-            cout << "Invalid seller ID.\nRe-enter the ID: ";
-            cin >> sid;
-        }
-    }
+        while (!(cin >> sid) || sid > sellers.size() || sid < 1) {
+        cin.clear(); // clear error flags
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
+        cout << "Invalid seller ID. Re-enter the ID: ";
 }
+
+    }
 
     int ch = 1;
     bool prioritize=false;
     cout<<"need to prioritize orders for delivery? press y if yes, else n";
-    int chr;
+    char chr;
     cin>>chr;
     if(chr=='Y' || chr=='y')
         prioritize=true;
