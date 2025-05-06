@@ -740,19 +740,104 @@ void pause() {
 
 
 // Dummy placeholders for actual logic
-bool uploadOrderData() {
-    cout << "\nUploading order data...\n";
-    return true;
+vector uploadOrderData(unordered_map<string, int>& cityToId, vector& sellers) {
+vector collectedOrders;
+cout << "\n--- Upload Order Data ---\n";
+int sid;
+cout << "Enter seller ID (0 for new seller): ";
+cin >> sid;
+
+if (sid == 0) {
+    // New seller creation
+    string city;
+    cout << "Enter seller location (first letter capital): ";
+    cin >> city;
+
+    while (!cityToId.count(city)) {
+        cout << "Invalid city name. Re-enter: ";
+        cin >> city;
+    }
+
+    int loc = cityToId[city];
+    Seller newSeller(loc);
+    sellers.push_back(newSeller);
+    sid = sellers.size(); // new seller ID is index + 1
+    cout << "New seller created with ID: " << sid << endl;
+} else if (sid > sellers.size() || sid < 1) {
+    cout << "Invalid seller ID.\n";
+    return collectedOrders;
 }
 
-bool setPriorities() {
-    cout << "\nSetting order priorities...\n";
-    return true;
+int ch = 1;
+while (ch) {
+    string dest;
+    double wt, vol;
+    int priority;
+    cout << "\nEnter order destination (first letter capital): ";
+    cin >> dest;
+    while (!cityToId.count(dest)) {
+        cout << "Invalid destination. Re-enter: ";
+        cin >> dest;
+    }
+    int destId = cityToId[dest];
+
+    cout << "Enter weight: ";
+    cin >> wt;
+    cout << "Enter volume: ";
+    cin >> vol;
+    cout << "Enter priority (1 = highest): ";
+    cin >> priority;
+
+    Order order(sid, sellers[sid - 1].location, destId, wt, vol, priority);
+    sellers[sid - 1].addOrder(order);
+    collectedOrders.push_back(order);
+
+    cout << "Press 1 to add another order, else 0: ";
+    cin >> ch;
 }
 
-bool chooseOptimizationGoal() {
-    cout << "\nChoosing optimization goal...\n";
-    return true;
+return collectedOrders;
+}
+
+// 2. Set Priorities
+unordered_map<int, int> setPriorities(const vector<Order>& orders) {
+    unordered_map<int, int> priorityMap;
+    cout << "\nSet priority for each order (1 = High, 2 = Medium, 3 = Low):\n";
+
+    for (const auto& order : orders) {
+        int priority;
+        cout << "Order ID " << order.orderId << " to " << cities[order.destination - 1] << ": ";
+        cin >> priority;
+        while (priority < 1 || priority > 3) {
+            cout << "Invalid input. Enter priority (1, 2, or 3): ";
+            cin >> priority;
+        }
+        priorityMap[order.orderId] = priority;
+    }
+
+    return priorityMap;
+}
+
+// 3. Choose Optimization Goal
+string chooseOptimizationGoal() {
+    cout << "\nChoose optimization goal:\n";
+    cout << "1. Minimize Cost\n";
+    cout << "2. Minimize Delivery Time\n";
+    cout << "3. Priority-Based Delivery\n";
+    int choice;
+    cin >> choice;
+
+    while (choice < 1 || choice > 3) {
+        cout << "Invalid choice. Enter 1, 2, or 3: ";
+        cin >> choice;
+    }
+
+    switch (choice) {
+        case 1: return "cost";
+        case 2: return "time";
+        case 3: return "priority";
+        default: return "cost";
+    }
 }
 
 
