@@ -755,10 +755,137 @@ bool chooseOptimizationGoal() {
     return true;
 }
 
-void runSimulation() {
+
+void run_hubspoke_model(int sellerId,
+Seller& seller,
+const vector& newOrders,
+vector& simulatedOrders) {
+for (const auto& order : newOrders) {
+seller.addOrder(order);             // Add to seller’s list
+simulatedOrders.push_back(order);   // Add to global simulation
+processOrder(order);                // Run hub-spoke processing
+}
+cout << "\n[Hub-and-Spoke Model] Processed " << newOrders.size()
+     << " orders for Seller ID: " << sellerId << endl;
+}
+
+
+void run_point_to_point_model(const vector& simulatedOrders,
+const vector& hubs,
+const vector& cities,
+int vehiclesPerDepot = 2) {
+vector depots;
+for (const City& hub : hubs) {
+depots.push_back(PPCity(hub.id, 0, 0));
+}
+    vector<PPCity> nodes;
+vector<pair<int, int>> pdPairs;
+
+for (const Order& order : simulatedOrders) {
+    int pickupIdx = nodes.size();
+    nodes.emplace_back(order.source, 0, order.weight, order.orderId, true);
+
+    int deliveryIdx = nodes.size();
+    nodes.emplace_back(order.destination, order.weight, 0, order.orderId, false);
+
+    pdPairs.emplace_back(pickupIdx, deliveryIdx);
+
+    // Displaying basic order info
+    cout << "Order ID: " << order.orderId << endl;
+    cout << "Source: " << cities[order.source - 1].name << endl;
+    cout << "Destination: " << cities[order.destination - 1].name << endl;
+    cout << endl;
+}
+
+// Run Simulated Annealing
+vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot);
+
+// Display routes
+for (int v = 0; v < bestSolution.size(); ++v) {
+    cout << "Vehicle " << v + 1 << " (Depot ID: " << bestSolution[v].depotID << "): ";
+    for (int i = 0; i < bestSolution[v].route.size(); ++i) {
+        cout << nodes[bestSolution[v].route[i]].id;
+        if (i < bestSolution[v].route.size() - 1) cout << " -> ";
+    }
+    cout << endl;
+}
+}
+
+
+void runSimulation(vector<vector<double>> distBtwCities,int sellerId,
+const vector<tuple<string, double, double>>& orderInputs, // destination name, weight, volume
+const unordered_map<string, int>& cityToId,
+) {
     cout << "\nRunning simulation using provided preferences...\n";
+    int k = 10;
+    double wcss = 0;
+    auto clusters = kMeansClustering(cities, k, wcss);
+    vector<City>hubs;
+    for(auto cluster:clusters)
+    {
+        hubs.push_back(findHubs(cluster,distBtwCities));
+    }
+
+    for (int i = 0; i < clusters.size(); ++i) {
+        cout << "Cluster " << i + 1 << ":\n";
+        for (const City& c : clusters[i]) {
+            cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
+            spokeToHub[c.id]=hubs[i].id;
+        }
+        cout<<"Hub:"<<hubs[i].name<<endl;
+        cout << "\n";
+    }
+
+    int cnt1=1,cnt2=1;
+    for(int i=1;i<=49;i++)
+    {
+        for(int j=i+1;j<=49;j++)
+        {
+            if(spokeToHub[i]!=i)
+            {
+                locToHSCarrier[{i,spokeToHub[i]}]=*(new HubSpokeCarrier(cnt1++,i));
+                break;
+            }
+            else if(spokeToHub[j]==j)
+            {
+                locToHHCarrier[{i,j}]=*(new HubHubCarrier(cnt2++,i,j));
+            }
+        }
+    }
+
+    cout << "Total WCSS: " << wcss << endl;
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> locationDist(1, 50);
+
+    vector<Seller> sellers;
+
+    // Create 5 sellers with random location IDs
+    for (int i = 1; i <= 5; ++i) {
+        int locId = locationDist(gen);
+        sellers.push_back(*(new Seller(i,locId)));
+    }
+
+    // Generate 30 random orders
+    vector<Order> simulatedOrders = generateRandomOrders(30);
+
+    // Assign orders to sellers
+    for (const auto& order : simulatedOrders) {
+        int index = order.sellerId - 1;
+        if (index >= 0 && index < sellers.size()) {
+            sellers[index].addOrder(order);
+        }
+    }
+
+    // Print sample output
+    for (const auto& seller : sellers) {
+        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << ") has " << seller.orders.size() << " orders.\n";
+    }
     cout << "\nSimulation complete.\n";
 }
+
+
 
 void generateRecommendation() {
     cout << "\nAnalyzing results and generating recommendation...\n";
@@ -772,6 +899,8 @@ void clear_screen() {
     system("clear");
 #endif
 }
+
+
 
 void center_print(const string& text) {
     int width = 80;
@@ -982,7 +1111,7 @@ int main() {
     
     distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
-    int k = 10;
+    /*int k = 10;
     double wcss = 0;
     auto clusters = kMeansClustering(cities, k, wcss);
     vector<City>hubs;
@@ -1046,8 +1175,8 @@ int main() {
     // Print sample output
     for (const auto& seller : sellers) {
         cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << ") has " << seller.orders.size() << " orders.\n";
-    }
-int ch;
+    }*/
+/*int ch;
 cout<<"Enter ch:";
 cin>>ch;
 switch(ch)
@@ -1136,6 +1265,6 @@ case 3:
 
     break;
 
-}
+}*/
     return 0;
 }
