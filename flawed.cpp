@@ -863,6 +863,7 @@ void setConsoleColors() {
 
 int main() {
     setConsoleColors();
+    intro();
     vector<City> cities = {
         {1, "Delhi", 700, 220},
     {2, "Amritsar", 640, 130},
