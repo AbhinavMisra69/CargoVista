@@ -1,140 +1,150 @@
-#include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <queue>
-#include <algorithm>
 #include <limits>
+#include <algorithm>
 
 using namespace std;
 
 struct Order {
     int id;
-    int destinationCityId;
+    int destination; // city id
+    double weight;
 };
 
 struct City {
     int id;
-    vector<pair<int, double>> neighbors; // destination city id and distance
+};
+
+struct CarrierRoute {
+    int hubId;
+    vector<int> route;
+    double totalWeight;
+    double totalDistance;
 };
 
 struct OrderWithPriority {
     Order order;
     int priority;
-
     bool operator<(const OrderWithPriority& other) const {
-        return priority < other.priority; // higher priority comes first in max heap
+        return priority < other.priority; // Max-heap: higher priority first
     }
 };
 
-vector<int> shortestPath(int fromCityId, int toCityId, const unordered_map<int, City>& cityMap) {
-    unordered_map<int, double> dist;
-    unordered_map<int, int> prev;
-    for (const auto& [id, _] : cityMap) {
-        dist[id] = numeric_limits<double>::infinity();
-    }
-    dist[fromCityId] = 0.0;
+// Dijkstra's Algorithm using adjacency matrix
+vector<int> shortestPath(int src, int dest, const vector<vector<double>>& adj_matrix) {
+    int n = adj_matrix.size();
+    vector<double> dist(n, numeric_limits<double>::infinity());
+    vector<int> prev(n, -1);
+    vector<bool> visited(n, false);
+    priority_queue<pair<double, int>, vector<pair<double, int>>, greater<>> pq;
 
-    using PD = pair<double, int>; // (distance, cityId)
-    priority_queue<PD, vector<PD>, greater<PD>> pq;
-    pq.push({0.0, fromCityId});
+    dist[src] = 0;
+    pq.push({0.0, src});
 
     while (!pq.empty()) {
         auto [currDist, u] = pq.top(); pq.pop();
-        if (u == toCityId) break;
-        if (currDist > dist[u]) continue;
+        if (visited[u]) continue;
+        visited[u] = true;
 
-        for (const auto& [v, weight] : cityMap.at(u).neighbors) {
-            if (dist[u] + weight < dist[v]) {
-                dist[v] = dist[u] + weight;
-                prev[v] = u;
-                pq.push({dist[v], v});
+        for (int v = 0; v < n; ++v) {
+            if (adj_matrix[u][v] > 0 && !visited[v]) {
+                double alt = dist[u] + adj_matrix[u][v];
+                if (alt < dist[v]) {
+                    dist[v] = alt;
+                    prev[v] = u;
+                    pq.push({alt, v});
+                }
             }
         }
     }
 
     vector<int> path;
-    for (int at = toCityId; prev.count(at); at = prev[at]) {
+    for (int at = dest; at != -1; at = prev[at])
         path.push_back(at);
-    }
-    path.push_back(fromCityId);
     reverse(path.begin(), path.end());
     return path;
 }
 
-vector<int> PriorityBasedDelivery(
-    const vector<Order>& orders,
-    const unordered_map<int, int>& orderPriorityMap,
-    const unordered_map<int, City>& cityMap,
-    int sellerCityId
-) {
+CarrierRoute PriorityBasedCarrierRoute(const vector<Order>& orders,
+                                       const unordered_map<int, int>& orderPriority,
+                                       const unordered_map<int, City>& cityMap,
+                                       const City& sellerLocation,
+                                       const vector<vector<double>>& adj_matrix,
+                                       int hubId,
+                                       double vehicleCapacity) {
     priority_queue<OrderWithPriority> pq;
-    unordered_map<int, vector<int>> cityToOrdersMap; // cityId -> order IDs
-    unordered_map<int, Order> orderMap;
+    unordered_map<int, vector<Order>> ordersByCity;
     unordered_set<int> deliveredOrderIds;
 
     for (const auto& order : orders) {
-        int priority = orderPriorityMap.at(order.id);
-        pq.push({order, priority});
-        orderMap[order.id] = order;
-        cityToOrdersMap[order.destinationCityId].push_back(order.id);
+        if (order.weight > vehicleCapacity) continue; // skip overweight orders
+        int pri = orderPriority.at(order.id);
+        pq.push({order, pri});
+        ordersByCity[order.destination].push_back(order);
     }
 
-    vector<int> deliverySequence;
-    int currentCityId = sellerCityId;
+    CarrierRoute cr;
+    cr.hubId = hubId;
+    cr.route.push_back(sellerLocation.id);
+    cr.totalWeight = 0;
+    cr.totalDistance = 0.0;
+    int currentCity = sellerLocation.id;
 
     while (!pq.empty()) {
-        OrderWithPriority next;
-        do {
-            if (pq.empty()) break;
-            next = pq.top(); pq.pop();
-        } while (deliveredOrderIds.count(next.order.id));
+        double currentLoad = 0.0;
+        int startCity = currentCity;
 
-        if (deliveredOrderIds.count(next.order.id)) break;
+        while (!pq.empty()) {
+            OrderWithPriority next;
+            do {
+                if (pq.empty()) break;
+                next = pq.top(); pq.pop();
+            } while (deliveredOrderIds.count(next.order.id));
 
-        vector<int> path = shortestPath(currentCityId, next.order.destinationCityId, cityMap);
-        for (int cityId : path) {
-            if (cityToOrdersMap.count(cityId)) {
-                vector<int>& ids = cityToOrdersMap[cityId];
-                vector<int> remaining;
-                for (int id : ids) {
-                    if (!deliveredOrderIds.count(id)) {
-                        deliveredOrderIds.insert(id);
-                        deliverySequence.push_back(id);
-                        orderMap.erase(id);
-                    } else {
-                        remaining.push_back(id);
+            if (deliveredOrderIds.count(next.order.id)) break;
+            if (currentLoad + next.order.weight > vehicleCapacity) {
+                pq.push(next); // Put back for next round
+                break;
+            }
+
+            vector<int> path = shortestPath(currentCity, next.order.destination, adj_matrix);
+
+            for (size_t i = 1; i < path.size(); ++i) {
+                int prevCity = path[i - 1];
+                int thisCity = path[i];
+                cr.totalDistance += adj_matrix[prevCity][thisCity];
+
+                if (!ordersByCity.count(thisCity)) continue;
+                for (const auto& o : ordersByCity[thisCity]) {
+                    if (!deliveredOrderIds.count(o.id) && currentLoad + o.weight <= vehicleCapacity) {
+                        deliveredOrderIds.insert(o.id);
+                        currentLoad += o.weight;
+                        cr.totalWeight += o.weight;
+                        cr.route.push_back(thisCity);
                     }
                 }
-                cityToOrdersMap[cityId] = remaining;
+                ordersByCity[thisCity].erase(remove_if(ordersByCity[thisCity].begin(), ordersByCity[thisCity].end(),
+                                                       [&](const Order& o) { return deliveredOrderIds.count(o.id); }),
+                                             ordersByCity[thisCity].end());
             }
-            currentCityId = cityId;
+
+            currentCity = next.order.destination;
+        }
+
+        // Return to seller location for next batch
+        if (!pq.empty()) {
+            vector<int> returnPath = shortestPath(currentCity, sellerLocation.id, adj_matrix);
+            for (size_t i = 1; i < returnPath.size(); ++i) {
+                int prevCity = returnPath[i - 1];
+                int thisCity = returnPath[i];
+                cr.totalDistance += adj_matrix[prevCity][thisCity];
+                cr.route.push_back(thisCity);
+            }
+            currentCity = sellerLocation.id;
         }
     }
 
-    return deliverySequence;
-}
-
-int main() {
-    vector<Order> orders = {
-        {1, 2}, {2, 4}, {3, 3}, {4, 5}
-    };
-
-    unordered_map<int, int> priority = {
-        {1, 2}, {2, 5}, {3, 3}, {4, 4}
-    };
-
-    unordered_map<int, City> cityMap = {
-        {1, {1, {{2, 1}, {3, 4}}}},
-        {2, {2, {{1, 1}, {4, 2}}}},
-        {3, {3, {{1, 4}, {4, 1}}}},
-        {4, {4, {{2, 2}, {3, 1}, {5, 3}}}},
-        {5, {5, {{4, 3}}}}
-    };
-
-    vector<int> result = PriorityBasedDelivery(orders, priority, cityMap, 1);
-    for (int id : result) {
-        cout << "Delivered Order ID: " << id << endl;
-    }
-    return 0;
+    return cr;
 }
