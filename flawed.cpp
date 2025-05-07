@@ -1153,8 +1153,274 @@ void pause() {
     cin.get();
 }
 
+
+
+string chooseOptimizationGoal() {
+    cout << "\nChoose optimization goal:\n";
+    cout << "1. Minimize Cost\n";
+    cout << "2. Minimize Delivery Time\n";
+    cout << "3. Priority-Based Delivery\n";
+    int choice;
+    cin >> choice;
+
+    while (choice < 1 || choice > 3) {
+        cout << "Invalid choice. Enter 1, 2, or 3: ";
+        cin >> choice;
+    }
+
+    switch (choice) {
+        case 1: return "cost";
+        case 2: return "time";
+        case 3: return "priority";
+        default: return "cost";
+    }
+}
+
+double run_hubspoke_model(int sellerId,
+Seller& seller,
+const vector& newOrders,
+vector& simulatedOrders) {
+    
+for(Seller seller:sellers)
+    {
+        cout<<"For seller with seller ID "<<seller.sellerId<<":\n";
+        int time=0;
+        double cost=0;
+        pair<int,double>timeNdCost;
+        for(auto order:seller.orders)
+        {
+            timeNdCost=processOrder(order,spokeToHub);
+            cout<<"For Order ID:"<<order.orderId<<endl;
+            cout<<"Time:"<<timeNdCost.first<<" days         ";
+            cout<<"Cost: Rs."<<timeNdCost.second<<endl<<endl;
+            time=max(timeNdCost.first,time);
+            cost+=timeNdCost.second;
+        }
+         cout << "Total cost for seller = Rs. " << cost << endl;
+        cout << "All orders will be delivered within " << time << " day(s)\n\n";
+    }
+
+    int sid;
+    cout<<"Enter seller id if existing seller, else 0";
+    cin>>sid;
+    if(sid<=sellers.size() && sid>0)
+    {
+        Seller curSeller=sellers[sid];
+        int ch=1;
+        string dest;
+        double wt;
+        double vol;
+        int destId;
+        while(ch)
+        {
+            cout<<"Enter destination(only first letter capital),weight,volume:";
+            cin>>dest>>wt>>vol;
+            while(!cityToId.count(dest))
+            {
+                cout<<"Invalid destination!\nRe-enter the destination:";
+                cin>>dest;
+            }
+            destId=cityToId[dest];
+            Order* order=new Order(sid,sellers[sid].location,destId,wt,vol);
+            sellers[sid].addOrder(*order);
+            processOrder(*order,spokeToHub);
+            cout<<"press 1 for more orders, else 0";
+            cin>>ch;
+        }
+    }
+    else
+    {
+        cout<<"invalid seller!";
+    }
+
+  return timeNdCost.second;
+    
+}
+
+double run_point_to_point_model(const vector& simulatedOrders,
+const vector& hubs,
+const vector& cities,
+int vehiclesPerDepot = 2){
+     // Create depot list
+    vector<PPCity> depots;
+    for (City hub : hubs) {
+        depots.push_back(PPCity(hub.id, 0, 0));
+    }
+
+    vector<PPCity> nodes;
+    vector<pair<int, int>> pdPairs;
+    unordered_map<int, int> orderToVehicleIdx;
+
+
+
+    for (auto& order : simulatedOrders) {
+        int pickupIdx = nodes.size();
+        nodes.push_back(PPCity(order.source, 0, order.weight, order.orderId, true));
+
+        int deliveryIdx = nodes.size();
+        nodes.push_back(PPCity(order.destination, order.weight, 0, order.orderId, false));
+
+        pdPairs.push_back({pickupIdx, deliveryIdx});
+        cout<<"order id:"<<order.orderId<<endl;
+        cout<<"source:"<<cities[order.source-1].name<<" "<<order.source<<endl;
+        cout<<"destination:"<<cities[order.destination-1].name<<" "<<order.destination<<endl;
+        cout<<endl;
+    }
+
+
+    // Simulated Annealing to find the optimal routes
+    int vehiclesPerDepot = 2;
+    vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot, orderToVehicleIdx);
+    for(auto [id,cc]:orderToVehicleIdx)
+    {
+        cout<<"order id:"<<id<<"   carrier.hub"<<bestSolution[cc].id<<endl;
+    }
+    cout<<endl;
+
+    // Output the routes
+    for (int v = 0; v < bestSolution.size(); ++v) {
+        cout << "Vehicle " << v << " (Depot " << bestSolution[v].depotID << "): ";
+        for (int i = 0; i < bestSolution[v].route.size(); ++i) {
+            cout << nodes[bestSolution[v].route[i]].id;
+            if (i < bestSolution[v].route.size() - 1)
+                cout << " -> ";
+        }
+        cout << endl;
+    }
+    
+
+      return  PPCost(sellers.back(),bestSolution,orderToVehicleIdx,nodes);
+    
+    
+}
+
+
+double runSimulation(vector<vector<double>> distBtwCities,int sellerId,
+const vector<tuple<string, double, double>>& orderInputs, // destination name, weight, volume
+const unordered_map<string, int>& cityToId,
+) {
+    double Min_cost = INT_MAX;
+    int k = 10;
+    double wcss = 0;
+    auto clusters = kMeansClustering(cities, k, wcss);
+    vector<City>hubs;
+    for(auto cluster:clusters)
+    {
+        hubs.push_back(findHubs(cluster,distBtwCities));
+    }
+
+    for (int i = 0; i < clusters.size(); ++i) {
+        cout << "Cluster " << i + 1 << ":\n";
+        for (const City& c : clusters[i]) {
+            cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
+            spokeToHub[c.id]=hubs[i].id;
+        }
+        cout<<"Hub:"<<hubs[i].name<<endl;
+        cout << "\n";
+    }
+
+    int cnt1=1,cnt2=1;
+    for(int i=1;i<=49;i++)
+    {
+        for(int j=i+1;j<=50;j++)
+        {
+            if(spokeToHub[i]!=i)
+            {
+                locToHSCarrier[{i,spokeToHub[i]}]=*(new HubSpokeCarrier(cnt1++,i));
+                break;
+            }
+            else if(j<=49 && spokeToHub[j]==j)
+            {
+                locToHHCarrier[{i,j}]=*(new HubHubCarrier(cnt2++,i,j));
+            }
+        }
+    }
+
+    cout << "Total WCSS: " << wcss << endl;
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> locationDist(1, 49);
+
+    vector<Seller> sellers;
+
+    // Create 5 sellers with random location IDs
+    for (int i = 1; i <= 5; ++i) {
+        int locId = locationDist(gen);
+        sellers.push_back(*(new Seller(i,locId)));
+    }
+
+    // Generate 30 random orders
+    vector<Order> simulatedOrders = generateRandomOrders(30,sellers);
+
+    // Assign orders to sellers
+    for (auto& order : simulatedOrders) {
+        int index = order.sellerId - 1;
+        if (index >= 0 && index < sellers.size()) {
+            sellers[index].addOrder(order);
+        }
+    }
+
+    // Print sample output
+    for (auto& seller : sellers) {
+        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
+    }
+
+
+// Step 1: Create Order objects from orderInputs
+Seller& seller = sellers[sellerId - 1];
+vector<Order> newOrders;
+for (const auto& [destName, weight, volume] : orderInputs) {
+    int destId = cityToId.at(destName);
+    Order order(sellerId, seller.location, destId, weight, volume);
+    newOrders.push_back(order);
+    seller.addOrder(order);
+}
+   
+  double hubcost = run_hubspoke_model(int sellerId,
+Seller& seller,
+const vector& newOrders,
+vector& simulatedOrders);
+
+  double PPprice = run_point_to_point_model(const vector& simulatedOrders,hubs,cities);
+   
+City hub = cities[spokeToHub[seller.location] - 1];
+vector<Order>& collectedOrders = seller.orders;
+
+if (prioritize) {
+    ccRoute = PriorityBasedCarrierRoute(
+        collectedOrders,
+        orderPriority,
+        cities[seller.location - 1],
+        distBtwCities,
+        hub.id,
+        2000
+    );
+} else {
+    ccRoute = PersonalizedCarrierRouting(
+        collectedOrders,
+        hub.id,
+        cities,
+        cities[seller.location - 1],
+        2000
+    );
+}
+
+// Print the resulting route
+cout << "Final Personalized Carrier Route:\n";
+for (int cityIdx : ccRoute.route) {
+    City city = cities[cityIdx - 1];
+    cout << "City ID: " << city.id << " City: " << city.name << " -> ";
+}
+ double cost = 24*ccRoute.totalDistance;
+cout << "cost: " << 24 * ccRoute.totalDistance << " INR\n";
+cout << "time: " << ceil(ccRoute.totalDistance / (16.0 * 50.0)) << " days\n";  // 16 hrs/day at 50 km/h
+return Min_cost = min(Min_cost , min(cost,min(PPprice,bubcost);
+     
+}
+
 // Dummy placeholders for actual logic
-vector uploadOrderData(unordered_map<string, int>& cityToId, vector& sellers) {
+vector uploadOrderData(unordered_map<string, int>& cityToId, vector<Seller> sellers) {
     clear_screen();
     center_print("------------------------------");
     center_print(" Order Preferences Setup ");
@@ -1239,241 +1505,6 @@ runSimulation(distBtwCities, sid, orderInputs, cityToId, sellers, cities);
 
 return collectedOrders.back();
 }
-
-string chooseOptimizationGoal() {
-    cout << "\nChoose optimization goal:\n";
-    cout << "1. Minimize Cost\n";
-    cout << "2. Minimize Delivery Time\n";
-    cout << "3. Priority-Based Delivery\n";
-    int choice;
-    cin >> choice;
-
-    while (choice < 1 || choice > 3) {
-        cout << "Invalid choice. Enter 1, 2, or 3: ";
-        cin >> choice;
-    }
-
-    switch (choice) {
-        case 1: return "cost";
-        case 2: return "time";
-        case 3: return "priority";
-        default: return "cost";
-    }
-}
-
-void run_hubspoke_model(int sellerId,
-Seller& seller,
-const vector& newOrders,
-vector& simulatedOrders) {
-    
-for(Seller seller:sellers)
-    {
-        cout<<"For seller with seller ID "<<seller.sellerId<<":\n";
-        int time=0;
-        double cost=0;
-        pair<int,double>timeNdCost;
-        for(auto order:seller.orders)
-        {
-            timeNdCost=processOrder(order,spokeToHub);
-            cout<<"For Order ID:"<<order.orderId<<endl;
-            cout<<"Time:"<<timeNdCost.first<<" days         ";
-            cout<<"Cost: Rs."<<timeNdCost.second<<endl<<endl;
-            time=max(timeNdCost.first,time);
-            cost+=timeNdCost.second;
-        }
-         cout << "Total cost for seller = Rs. " << cost << endl;
-        cout << "All orders will be delivered within " << time << " day(s)\n\n";
-    }
-
-    int sid;
-    cout<<"Enter seller id if existing seller, else 0";
-    cin>>sid;
-    if(sid<=sellers.size() && sid>0)
-    {
-        Seller curSeller=sellers[sid];
-        int ch=1;
-        string dest;
-        double wt;
-        double vol;
-        int destId;
-        while(ch)
-        {
-            cout<<"Enter destination(only first letter capital),weight,volume:";
-            cin>>dest>>wt>>vol;
-            while(!cityToId.count(dest))
-            {
-                cout<<"Invalid destination!\nRe-enter the destination:";
-                cin>>dest;
-            }
-            destId=cityToId[dest];
-            Order* order=new Order(sid,sellers[sid].location,destId,wt,vol);
-            sellers[sid].addOrder(*order);
-            processOrder(*order,spokeToHub);
-            cout<<"press 1 for more orders, else 0";
-            cin>>ch;
-        }
-    }
-    else
-    {
-        cout<<"invalid seller!";
-    }
-    
-}
-
-void run_point_to_point_model(const vector& simulatedOrders,
-const vector& hubs,
-const vector& cities,
-int vehiclesPerDepot = 2){
-     // Create depot list
-    vector<PPCity> depots;
-    for (City hub : hubs) {
-        depots.push_back(PPCity(hub.id, 0, 0));
-    }
-
-    vector<PPCity> nodes;
-    vector<pair<int, int>> pdPairs;
-    unordered_map<int, int> orderToVehicleIdx;
-
-
-
-    for (auto& order : simulatedOrders) {
-        int pickupIdx = nodes.size();
-        nodes.push_back(PPCity(order.source, 0, order.weight, order.orderId, true));
-
-        int deliveryIdx = nodes.size();
-        nodes.push_back(PPCity(order.destination, order.weight, 0, order.orderId, false));
-
-        pdPairs.push_back({pickupIdx, deliveryIdx});
-        cout<<"order id:"<<order.orderId<<endl;
-        cout<<"source:"<<cities[order.source-1].name<<" "<<order.source<<endl;
-        cout<<"destination:"<<cities[order.destination-1].name<<" "<<order.destination<<endl;
-        cout<<endl;
-    }
-
-
-    // Simulated Annealing to find the optimal routes
-    int vehiclesPerDepot = 2;
-    vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot, orderToVehicleIdx);
-    for(auto [id,cc]:orderToVehicleIdx)
-    {
-        cout<<"order id:"<<id<<"   carrier.hub"<<bestSolution[cc].id<<endl;
-    }
-    cout<<endl;
-
-    // Output the routes
-    for (int v = 0; v < bestSolution.size(); ++v) {
-        cout << "Vehicle " << v << " (Depot " << bestSolution[v].depotID << "): ";
-        for (int i = 0; i < bestSolution[v].route.size(); ++i) {
-            cout << nodes[bestSolution[v].route[i]].id;
-            if (i < bestSolution[v].route.size() - 1)
-                cout << " -> ";
-        }
-        cout << endl;
-    }
-    for(Seller seller:sellers)
-    {
-        PPCost(seller,bestSolution,orderToVehicleIdx,nodes);
-    }
-    
-}
-
-
-void runSimulation(vector<vector<double>> distBtwCities,int sellerId,
-const vector<tuple<string, double, double>>& orderInputs, // destination name, weight, volume
-const unordered_map<string, int>& cityToId,
-) {
-    int k = 10;
-    double wcss = 0;
-    auto clusters = kMeansClustering(cities, k, wcss);
-    vector<City>hubs;
-    for(auto cluster:clusters)
-    {
-        hubs.push_back(findHubs(cluster,distBtwCities));
-    }
-
-    for (int i = 0; i < clusters.size(); ++i) {
-        cout << "Cluster " << i + 1 << ":\n";
-        for (const City& c : clusters[i]) {
-            cout << "  " << c.id << " - " << c.name << " (" << c.x << ", " << c.y << ")\n";
-            spokeToHub[c.id]=hubs[i].id;
-        }
-        cout<<"Hub:"<<hubs[i].name<<endl;
-        cout << "\n";
-    }
-
-    int cnt1=1,cnt2=1;
-    for(int i=1;i<=49;i++)
-    {
-        for(int j=i+1;j<=50;j++)
-        {
-            if(spokeToHub[i]!=i)
-            {
-                locToHSCarrier[{i,spokeToHub[i]}]=*(new HubSpokeCarrier(cnt1++,i));
-                break;
-            }
-            else if(j<=49 && spokeToHub[j]==j)
-            {
-                locToHHCarrier[{i,j}]=*(new HubHubCarrier(cnt2++,i,j));
-            }
-        }
-    }
-
-    cout << "Total WCSS: " << wcss << endl;
-
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<> locationDist(1, 49);
-
-    vector<Seller> sellers;
-
-    // Create 5 sellers with random location IDs
-    for (int i = 1; i <= 5; ++i) {
-        int locId = locationDist(gen);
-        sellers.push_back(*(new Seller(i,locId)));
-    }
-
-    // Generate 30 random orders
-    vector<Order> simulatedOrders = generateRandomOrders(30,sellers);
-
-    // Assign orders to sellers
-    for (auto& order : simulatedOrders) {
-        int index = order.sellerId - 1;
-        if (index >= 0 && index < sellers.size()) {
-            sellers[index].addOrder(order);
-        }
-    }
-
-    // Print sample output
-    for (auto& seller : sellers) {
-        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
-    }
-   
-   run_hubspoke_model(int sellerId,
-Seller& seller,
-const vector& newOrders,
-vector& simulatedOrders);
-   run_point_to_point_model(const vector& simulatedOrders,hubs,cities);
-   
-    City hub=cities[spokeToHub[sellers[sid-1].location]-1];
-    if(prioritize)
-        ccRoute=PriorityBasedCarrierRoute(collectedOrders,orderPriority,cities[sellers[sid - 1].location-1],adj_matrix,hub.id,2000);
-    else
-        ccRoute=PersonalizedCarrierRouting(collectedOrders,hub.id,cities,cities[sellers[sid-1].location-1],2000);
-
-
-
-    // Print the resulting route
-    std::cout << "Final Personalized Carrier Route:\n";
-    for (int cityIdx : ccRoute.route) {
-        City city = cities[cityIdx-1];
-        std::cout << "City ID: " << city.id
-                  <<" City:"<<city.name<<"  ->  ";}
-    cout<<"cost:"<<24*ccRoute.totalDistance<<endl; //Rs. 24/km for personalized carrier
-    cout<<"time:"<<ceil(ccRoute.totalDistance/(16.0*50.0))<<" days"<<endl; //considering the vehicle operates 16 hrs per day at a speed of 50 km/hr
-
-   
-}
-
 
 void main_menu() {
     clear_screen();
@@ -1643,7 +1674,7 @@ int main() {
    
 
      main_menu();
-     orders_preferences_flow();
+    uploadOrderData();
      cin.ignore();
      cin.get();
      exitscr();
