@@ -1,6 +1,93 @@
 const int d = 15;
 const int v = 0.8;
 const int w = 1;
+#ifndef _GLIBCXX_NO_ASSERT
+  #include <cassert>
+  #endif
+  #include <cctype>
+  #include <cerrno>
+  #include <cfloat>
+  #include <ciso646>
+  #include <climits>
+  #include <clocale>
+  #include <cmath>
+  #include <csetjmp>
+  #include <csignal>
+  #include <cstdarg>
+  #include <cstddef>
+  #include <cstdio>
+  #include <cstdlib>
+  #include <cstring>
+  #include <ctime>
+
+  #if __cplusplus >= 201103L
+  #include <ccomplex>
+  #include <cfenv>
+  #include <cinttypes>
+  #include <cstdbool>
+  #include <cstdint>
+  #include <ctgmath>
+  #include <cwchar>
+  #include <cwctype>
+  #include <exception>
+  #include <stdexcept>
+  #endif
+
+  // C++
+  #include <algorithm>
+  #include <bitset>
+  #include <complex>
+  #include <deque>
+  #include <exception>
+  #include <fstream>
+  #include <functional>
+  #include <iomanip>
+  #include <ios>
+  #include <iosfwd>
+  #include <iostream>
+  #include <istream>
+  #include <iterator>
+  #include <limits>
+  #include <list>
+  #include <locale>
+  #include <map>
+  #include <memory>
+  #include <new>
+  #include <numeric>
+  #include <ostream>
+  #include <queue>
+  #include <set>
+  #include <sstream>
+  #include <stack>
+  #include <stdexcept>
+  #include <streambuf>
+  #include <string>
+  #include <typeinfo>
+  #include <utility>
+  #include <valarray>
+  #include <vector>
+
+  #if __cplusplus >= 201103L
+  #include <array>
+  #include <atomic>
+  #include <chrono>
+  #include <condition_variable>
+  #include <forward_list>
+  #include <future>
+  #include <initializer_list>
+  #include <mutex>
+  #include <random>
+  #include <ratio>
+  #include <regex>
+  #include <scoped_allocator>
+  #include <system_error>
+  #include <thread>
+  #include <tuple>
+  #include <typeindex>
+  #include <type_traits>
+  #include <unordered_map>
+  #include <unordered_set>
+  #endif
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -8,9 +95,37 @@ const int w = 1;
 #include <string>
 #include <cstdlib>
 #include <ctime>
-#include <bits/stdc++.h>
+#include <thread>
+#include <regex>
+#include <chrono>
+#include <algorithm>
+#include <windows.h>
 
 using namespace std;
+using namespace chrono;
+
+#ifdef _WIN32
+
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
+void clear_screen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+const int TERMINAL_WIDTH = 60;
+
+void center_print(const string& text) {
+    int padding = (TERMINAL_WIDTH - text.length()) / 2;
+    if (padding < 0) padding = 0;
+    cout << setw(padding + text.length()) << text << endl;
+}
 
 struct City {
     int id;
@@ -371,7 +486,7 @@ vector<Order> generateRandomOrders(int numOrders, vector<Seller>sellers,int sell
         double volume = volumeDist(gen);
 
         orders.push_back(*new Order(sellerId, pickup, delivery, weight, volume));
-        cout<<"sid:"<<sellerId<<" "<<"oickup:"<<pickup<<" "<<"delivery"<<delivery<<" weight:"<<weight<<" volume"<<volume<<" \n";
+        cout<<"sid: "<<sellerId<<"  "<<"Pickup: "<<pickup<<"  "<<"delivery: "<<delivery<<"  weight: "<<weight<<"  volume: "<<volume<<" \n";
     }
 
 return orders;
@@ -616,7 +731,7 @@ vector<PPCarrier> SimulatedAnnealingVRP(vector<PPCity>& nodes,
 }
 
 
-void PPCost(Seller& seller, vector<PPCarrier>& bestSolution,unordered_map<int, int>& orderToVehicleIdx, vector<PPCity>& nodes) {
+pair<int,double> PPCost(Seller& seller, vector<PPCarrier>& bestSolution,unordered_map<int, int>& orderToVehicleIdx, vector<PPCity>& nodes) {
     cout << "For seller with seller ID " << seller.sellerId << ":\n";
     vector<Order> allOrders = seller.orders;
     int src = seller.location;
@@ -670,6 +785,7 @@ void PPCost(Seller& seller, vector<PPCarrier>& bestSolution,unordered_map<int, i
 
     cout << "Total cost for seller = Rs. " << totalCost << endl;
     cout << "All orders will be delivered within " << maxTime << " day(s)\n\n";
+    return {totalCost,maxTime};
 }
 
 
@@ -917,8 +1033,240 @@ CarrierRoute PriorityBasedCarrierRoute(vector<Order>& orders,
     return cr;
 }
 
+void intro()
+{
+    clear_screen();
+    auto start = chrono::high_resolution_clock::now();
+    cout << "\n\n\n\n\n\n"<< endl;
+    cout << "                                                                                                                                                                                                     " << endl;
+    cout << "                                                                                                                                                                                                     " << endl;
+    cout << "    CCCCCCCCCCCCC                                                                                                                            iiii                            tttt                                     " << endl;
+    cout << "  CCC::::::::::::C                                                                                                                          i::::i                        ttt:::t                                    " << endl;
+    cout << "CC:::::::::::::::C                                                                                                                           iiii                         t:::::t                                    " << endl;
+    cout << "C:::::CCCCCCCC::::C                                                                                                                                                       t:::::t                                   " << endl;
+    cout << "C:::::C       CCCCCC      aaaaaaaaaaaaa       rrrrr   rrrrrrrrr          ggggggggg   ggggg     ooooooooooo        vvvvvvv           vvvvvvviiiiiii     ssssssssss   ttttttt:::::ttttttt      aaaaaaaaaaaaa         " << endl;
+    cout << "C:::::C                   a::::::::::::a      r::::rrr:::::::::r        g:::::::::ggg::::g   oo:::::::::::oo       v:::::v         v:::::v i:::::i   ss::::::::::s  t:::::::::::::::::t      a::::::::::::a       " << endl;
+    cout << "C:::::C                  aaaaaaaaa:::::a      r:::::::::::::::::r      g:::::::::::::::::g  o:::::::::::::::o       v:::::v       v:::::v   i::::i ss:::::::::::::s t:::::::::::::::::t      aaaaaaaaa:::::a      " << endl;
+    cout << "C:::::C                           a::::a      rr::::::rrrrr::::::r    g::::::ggggg::::::gg  o:::::ooooo:::::o        v:::::v     v:::::v    i::::i s::::::ssss:::::stttttt:::::::tttttt               a::::a      " << endl;
+    cout << "C:::::C                    aaaaaaa:::::a      r:::::r     r:::::r    g:::::g     g:::::g    o::::o     o::::o         v:::::v   v:::::v     i::::i  s:::::s  ssssss       t:::::t              aaaaaaa:::::a      " << endl;
+    cout << "C:::::C                  aa::::::::::::a      r:::::r     rrrrrrr    g:::::g     g:::::g    o::::o     o::::o          v:::::v v:::::v      i::::i    s::::::s            t:::::t            aa::::::::::::a      " << endl;
+    cout << " C:::::C                a::::aaaa::::::a      r:::::r                g:::::g     g:::::g    o::::o     o::::o           v:::::v:::::v       i::::i       s::::::s         t:::::t           a::::aaaa::::::a     " << endl;
+    cout << "C:::::C       CCCCCC   a::::a    a:::::a      r:::::r                g::::::g    g:::::g    o::::o     o::::o            v:::::::::v        i::::i ssssss   s:::::s       t:::::t    tttttta::::a    a:::::a       " << endl;
+    cout << "C:::::CCCCCCCC::::C    a::::a    a:::::a      r:::::r                g:::::::ggggg:::::g    o:::::ooooo:::::o             v:::::::v        i::::::is:::::ssss::::::s      t::::::tttt:::::ta::::a    a:::::a        " << endl;
+    cout << "CC:::::::::::::::C     a:::::aaaa::::::a      r:::::r                 g::::::::::::::::g    o:::::::::::::::o              v:::::v         i::::::is::::::::::::::s       tt::::::::::::::ta:::::aaaa::::::a         " << endl;
+    cout << " CCC::::::::::::C      a::::::::::aa:::a      r:::::r                  gg::::::::::::::g     oo:::::::::::oo                v:::v          i::::::i s:::::::::::ss          tt:::::::::::tt a::::::::::aa:::a         " << endl;
+    cout << "    CCCCCCCCCCCCC       aaaaaaaaaa  aaaa      rrrrrrr                    gggggggg::::::g       ooooooooooo                   vvv           iiiiiiii  sssssssssss              ttttttttttt    aaaaaaaaaa  aaaa         " << endl;
+    cout << "                                                                                 g:::::g                                                                                                                            " << endl;
+    cout << "                                                                    gggggg       g:::::g                                                                                                                            " << endl;
+    cout << "                                                                    g:::::gg    gg:::::g                                                                                                                            " << endl;
+    cout << "                                                                      g::::::ggg:::::::g                                                                                                                           " << endl;
+    cout << "                                                                        gg:::::::::::::g                                                                                                                            " << endl;
+    cout << "                                                                          ggg::::::ggg                                                                                                                              " << endl;
+    cout << "                                                                             gggggg                                                                                                                                 " << endl;
+
+    while (true)
+    {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::seconds>(end - start).count();
+        if (duration >= 5)
+        {
+            clear_screen();
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+}
+
+// EXIT SCREEN
+void exitscr()
+{
+    auto start = chrono::high_resolution_clock::now();
+    cout << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl
+         << endl;
+    cout << "                                          *                                 *                                                    \n";
+    cout << "                                  *     **                                **                                                     \n";
+    cout << "                                 **     **                                **                                                     \n";
+    cout << "                                 **     **                                **                                                     \n";
+    cout << "                               ******** **                                **            **   ****         ****    **   ****     \n";
+    cout << "                              ********  **  ***      ****    ***  ****    **  ***        **    ***  *    * ***  *  **    ***  *  \n";
+    cout << "                                 **     ** * ***    * ***  *  **** **** * ** * ***       **     ****    *   ****   **     ****  \n";
+    cout << "                                 **     ***   ***  *   ****    **   ****  ***   *        **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **   *         **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **  *          **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   ** **          **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   ******         **      **    **    **    **      **   \n";
+    cout << "                                 **     **     ** **    **     **    **   **  ***         *********     ******      ******* **  \n";
+    cout << "                                  **    **     **  ***** **    ***   ***  **   *** *        **** ***     ****        *****   **  \n";
+    cout << "                                         **    **   ***   **    ***   ***  **   ***               ***                           \n";
+    cout << "                                               *                                           *****   ***                          \n";
+    cout << "                                              *                                          ********  **                           \n";
+    cout << "                                             *                                          *      ****                              \n";
+    cout << "                                            *                                                                                   \n";
+    cout << "                                                                                                                                \n";
+    cout << "                                 ***                                                                                           \n";
+    cout << "                               ** ***                                                        *                                 \n";
+    cout << "                              **   ***                                                      ***                                \n";
+    cout << "                              **                                                             *                                 \n";
+    cout << "                              **          ****    ***  ****       **   ****        ****                                        \n";
+    cout << "                              ******     * ***  *  **** **** *     **    ***  *   * **** * ***     ***  ****        ****      \n";
+    cout << "                              *****     *   ****    **   ****      **     ****   **  ****   ***     **** **** *    *  ***  *  \n";
+    cout << "                              **       **    **     **             **      **   ****         **      **   ****    *    ****   \n";
+    cout << "                              **       **    **     **             **      **     ***        **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **       ***      **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **         ***    **      **    **    **     **    \n";
+    cout << "                              **       **    **     **             **      **    ****  **    **      **    **    **     **    \n";
+    cout << "                              **        ******      ***             ******* **  * **** *     **      **    **    **     **    \n";
+    cout << "                              **         ****        ***             *****   **    ****      *** *   ***   ***    ********    \n";
+    cout << "                               **                                                             ***     ***   ***     *** ***   \n";
+    cout << "                                                                                                                         ***  \n";
+    cout << "                                                                                                                   ****   *** \n";
+    cout << "                                                                                                                 *******  **  \n";
+    cout << "                                                                                                                *     ****    \n";
+
+    while (true)
+    {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::seconds>(end - start).count();
+        if (duration >= 5)
+        {
+            clear_screen();
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+
+    clear_screen();
+    intro();
+    exit(0);
+}
+
+void get_console_size(int &width, int &height) {
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int columns, rows;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    width = columns;
+    height = rows;
+#else
+    width = 80;
+    height = 25;
+#endif
+}
+
+void pause() {
+    cout << "\nPress Enter to continue...";
+    cin.ignore();
+    cin.get();
+}
+
+
+
+string chooseOptimizationGoal() {
+    cout << "\nChoose optimization goal:\n";
+    cout << "1. Minimize Cost\n";
+    cout << "2. Minimize Delivery Time\n";
+    int choice;
+    cin >> choice;
+
+    while (choice < 1 || choice > 3) {
+        cout << "Invalid choice. Enter 1 or 2: ";
+        cin >> choice;
+    }
+
+    switch (choice) {
+        case 1: return "cost";
+        case 2: return "time";
+        default: return "cost";
+    }
+}
+
+pair<int,double> run_hubspoke_model(Seller& seller) {
+    cout<<"For seller with seller ID "<<seller.sellerId<<":\n";
+    int time=0;
+    double cost=0;
+
+    pair<int,double>timeNdCost;
+    for(auto order:seller.orders)
+    {
+        timeNdCost=processOrder(order,spokeToHub);
+        cout<<"For Order ID:"<<order.orderId<<endl;
+        cout<<"Time:"<<timeNdCost.first<<" days         ";
+        cout<<"Cost: Rs."<<timeNdCost.second<<endl<<endl;
+        time=max(timeNdCost.first,time);
+        cost+=timeNdCost.second;
+    }
+     cout << "Total cost for seller = Rs. " << cost << endl;
+    cout << "All orders will be delivered within " << time << " day(s)\n\n";
+
+
+  return timeNdCost;
+
+}
+
+
+
+void main_menu() {
+    clear_screen();
+
+    center_print("+---------------------------------------------------------+");
+    center_print("|                Welcome to CargoVista                   |");
+    center_print("+---------------------------------------------------------+");
+    center_print(" CargoVista is a simulation-based logistics tracker and   ");
+    center_print(" advisor designed to empower sellers with strategic       ");
+    center_print(" delivery insights. Our platform compares three core       ");
+    center_print(" delivery models — Hub-and-Spoke, Point-to-Point,         ");
+    center_print(" and Personalized Carrier — and recommends the best fit   ");
+    center_print(" for your needs.                                          ");
+    center_print(" Whether you're aiming to minimize costs, reduce delivery ");
+    center_print(" time, or prioritize specific orders, CargoVista simulates");
+    center_print(" all models for you.                                      ");
+    center_print(" Analyze. Compare. Deliver smarter — every time.          ");
+    center_print("                                                         ");
+    center_print("+---------------------------------------------------------+");
+    center_print("|                 CargoVista Roadmap                     |");
+    center_print("+---------------------------------------------------------+");
+    center_print("| Step 1: Orders & Preferences                           |");
+    center_print("|         Upload orders, set delivery goals              |");
+    center_print("|         - Upload Order Data                            |");
+    center_print("|         - Set Delivery Priorities                      |");
+    center_print("|         - Choose Optimization Goal                     |");
+    center_print("|                                                        |");
+    center_print("| Step 2: Simulate & Compare                             |");
+    center_print("|         Run all delivery models & view outcomes        |");
+    center_print("|                                                        |");
+    center_print("| Step 3: Get Recommendation                             |");
+    center_print("|         Our suggestion for optimal delivery strategy   |");
+    center_print("+---------------------------------------------------------+\n");
+
+
+     //cin.ignore();
+     cin.get();
+
+}
+
+
+void setConsoleColors() {
+    // Set background to olive green and text to light yellow (beige approximation)
+    system("color 30");
+    // '6' = olive/dark yellow background, 'A' = light green/yellow text
+}
+
+
+
 
 int main() {
+
+    setConsoleColors();
+    intro();
 
     vector<City> cities = {
         {1, "Delhi", 700, 220},
@@ -1032,6 +1380,14 @@ int main() {
 };
     distBtwCities=floydWarshallFromAdjMatrix(adj_matrix);
 
+
+
+     main_menu();
+    clear_screen();
+    cout<<"--------------------RUNNING SIMULATION----------------"<<endl;
+    cout << endl;
+    cout << endl;
+    double Min_cost = INT_MAX;
     int k = 10;
     double wcss = 0;
     auto clusters = kMeansClustering(cities, k, wcss);
@@ -1069,6 +1425,7 @@ int main() {
     }
 
     cout << "Total WCSS: " << wcss << endl;
+    cout << endl;
 
     random_device rd;
     mt19937 gen(rd());
@@ -1093,124 +1450,18 @@ int main() {
         }
     }
 
+    cout << endl;
     // Print sample output
     for (auto& seller : sellers) {
-        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
+        cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "  City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
     }
-int cs;
-cout<<"Enter choice:";
-cin>>cs;
-if(cs==1)
-{
-    for(Seller seller:sellers)
-    {
-        cout<<"For seller with seller ID "<<seller.sellerId<<":\n";
-        int time=0;
-        double cost=0;
-        pair<int,double>timeNdCost;
-        for(auto order:seller.orders)
-        {
-            timeNdCost=processOrder(order,spokeToHub);
-            cout<<"For Order ID:"<<order.orderId<<endl;
-            cout<<"Time:"<<timeNdCost.first<<" days         ";
-            cout<<"Cost: Rs."<<timeNdCost.second<<endl<<endl;
-            time=max(timeNdCost.first,time);
-            cost+=timeNdCost.second;
-        }
-         cout << "Total cost for seller = Rs. " << cost << endl;
-        cout << "All orders will be delivered within " << time << " day(s)\n\n";
-    }
-
-    int sid;
-    cout<<"Enter seller id if existing seller, else 0";
-    cin>>sid;
-    if(sid<=sellers.size() && sid>0)
-    {
-        Seller curSeller=sellers[sid];
-        int ch=1;
-        string dest;
-        double wt;
-        double vol;
-        int destId;
-        while(ch)
-        {
-            cout<<"Enter destination(only first letter capital),weight,volume:";
-            cin>>dest>>wt>>vol;
-            while(!cityToId.count(dest))
-            {
-                cout<<"Invalid destination!\nRe-enter the destination:";
-                cin>>dest;
-            }
-            destId=cityToId[dest];
-            Order* order=new Order(sid,sellers[sid].location,destId,wt,vol);
-            sellers[sid].addOrder(*order);
-            processOrder(*order,spokeToHub);
-            cout<<"press 1 for more orders, else 0";
-            cin>>ch;
-        }
-    }
-    else
-    {
-        cout<<"invalid seller!";
-    }
-}
-else if(cs==2)
-{
-      // Create depot list
-    vector<PPCity> depots;
-    for (City hub : hubs) {
-        depots.push_back(PPCity(hub.id, 0, 0));
-    }
-
-    vector<PPCity> nodes;
-    vector<pair<int, int>> pdPairs;
-    unordered_map<int, int> orderToVehicleIdx;
-
-
-
-    for (auto& order : simulatedOrders) {
-        int pickupIdx = nodes.size();
-        nodes.push_back(PPCity(order.source, 0, order.weight, order.orderId, true));
-
-        int deliveryIdx = nodes.size();
-        nodes.push_back(PPCity(order.destination, order.weight, 0, order.orderId, false));
-
-        pdPairs.push_back({pickupIdx, deliveryIdx});
-        cout<<"order id:"<<order.orderId<<endl;
-        cout<<"source:"<<cities[order.source-1].name<<" "<<order.source<<endl;
-        cout<<"destination:"<<cities[order.destination-1].name<<" "<<order.destination<<endl;
-        cout<<endl;
-    }
-
-
-    // Simulated Annealing to find the optimal routes
-    int vehiclesPerDepot = 2;
-    vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot, orderToVehicleIdx);
-    for(auto [id,cc]:orderToVehicleIdx)
-    {
-        cout<<"order id:"<<id<<"   carrier.hub"<<bestSolution[cc].id<<endl;
-    }
-    cout<<endl;
-
-    // Output the routes
-    for (int v = 0; v < bestSolution.size(); ++v) {
-        cout << "Vehicle " << v << " (Depot " << bestSolution[v].depotID << "): ";
-        for (int i = 0; i < bestSolution[v].route.size(); ++i) {
-            cout << nodes[bestSolution[v].route[i]].id;
-            if (i < bestSolution[v].route.size() - 1)
-                cout << " -> ";
-        }
-        cout << endl;
-    }
-    for(Seller seller:sellers)
-    {
-        PPCost(seller,bestSolution,orderToVehicleIdx,nodes);
-    }
-}
-
-else
-{
-    vector<Order> collectedOrders;
+     bool prioritize=false;
+    //calling the input function
+    cout << endl;
+    cout << endl;
+    center_print("------------------------------");
+    center_print(" Order Preferences Setup ");
+    center_print("------------------------------\n");
     cout << "\n--- Upload Order Data ---\n";
     int sid;
     cout << "Enter seller ID (0 for new seller): ";
@@ -1243,24 +1494,25 @@ else
     }
 
     int ch = 1;
-    bool prioritize=false;
-    cout<<"need to prioritize orders for delivery? press y if yes, else n";
+ int destId;
+  string dest;
+        double wt, vol;
+        int priority;
+    cout<<"need to prioritize orders for delivery? press y if yes, else n: ";
     char chr;
     cin>>chr;
     if(chr=='Y' || chr=='y')
         prioritize=true;
     unordered_map<int, int>orderPriority;
     while (ch) {
-        string dest;
-        double wt, vol;
-        int priority;
+
         cout << "\nEnter order destination (first letter capital): ";
         cin>>dest;
         while (!cityToId.count(dest)) {
             cout << "Invalid destination. Re-enter: ";
             cin >> dest;
         }
-        int destId = cityToId[dest];
+       destId = cityToId[dest];
         cout << "Enter weight: ";
         cin >> wt;
         cout << "Enter volume: ";
@@ -1268,7 +1520,6 @@ else
         //Order(int sId,int src, int des, double w, double v):sellerId(sId),source(src), destination(des), weight(w), volume(v)
         Order order(sid, sellers[sid - 1].location, destId, wt, vol);
         sellers[sid - 1].addOrder(order);
-        collectedOrders.push_back(order);
         if(prioritize){
             cout << "Enter priority (1 = highest): ";
             cin >>priority;
@@ -1277,18 +1528,87 @@ else
         cout << "Press 1 to add another order, else 0: ";
         cin >> ch;
     }
+
+    string goal = chooseOptimizationGoal();
+    cout << "Optimization goal selected: " << goal << endl;
+     cout << endl;
+
+    cout << "-----------------------HUB AND SPOKE MODEL----------------------------" << endl;
+    cout << endl;
+
+    pair<int,double> HubTimeNdCost = run_hubspoke_model(sellers.back());
+
+     cout << "-----------------------POINT TO POINT MODEL----------------------------" << endl;
+     cout << endl;
+        // Create depot list
+    vector<PPCity> depots;
+    for (City hub : hubs) {
+        depots.push_back(PPCity(hub.id, 0, 0));
+    }
+
+    vector<PPCity> nodes;
+    vector<pair<int, int>> pdPairs;
+    unordered_map<int, int> orderToVehicleIdx;
+
+
+
+    for (auto seller: sellers) {
+            for(auto order : seller.orders){
+
+
+        int pickupIdx = nodes.size();
+        nodes.push_back(PPCity(order.source, 0, order.weight, order.orderId, true));
+
+        int deliveryIdx = nodes.size();
+        nodes.push_back(PPCity(order.destination, order.weight, 0, order.orderId, false));
+
+        pdPairs.push_back({pickupIdx, deliveryIdx});
+       /* cout<<"order id:"<<order.orderId<<endl;
+        cout<<"source:"<<cities[order.source-1].name<<" "<<order.source<<endl;
+        cout<<"destination:"<<cities[order.destination-1].name<<" "<<order.destination<<endl;
+        cout<<endl;*/
+    }
+    }
+
+    // Simulated Annealing to find the optimal routes
+    int vehiclesPerDepot = 2;
+    vector<PPCarrier> bestSolution = SimulatedAnnealingVRP(nodes, pdPairs, depots, vehiclesPerDepot, orderToVehicleIdx);
+    /*for(auto [id,cc]:orderToVehicleIdx)
+    {
+        cout<<"order id:"<<id<<"   carrier.hub"<<bestSolution[cc].id<<endl;
+    }
+    cout<<endl;*/
+
+    // Output the routes
+    for (int v = 0; v < bestSolution.size(); ++v) {
+        cout << "Vehicle " << v << " (Depot " << bestSolution[v].depotID << "): ";
+        for (int i = 0; i < bestSolution[v].route.size(); ++i) {
+            cout << nodes[bestSolution[v].route[i]].id;
+            if (i < bestSolution[v].route.size() - 1)
+                cout << " -> ";
+        }
+        cout << endl;
+    }
+
+       pair<int,double> PPtimeNdCost = PPCost(sellers.back(),bestSolution,orderToVehicleIdx,nodes);
+
+cout << "-----------------------PERSONALIZED CARRIER MODEL----------------------------" << endl;
+cout << endl;
+cout << endl;
+
+vector<Order> collectedOrders;
+
+Order order(sid, sellers[sid - 1].location, destId, wt, vol);
+        sellers[sid - 1].addOrder(order);
+        collectedOrders.push_back(order);
+        if(prioritize){
+
+            orderPriority[order.orderId]=priority;
+        }
+
+
     CarrierRoute ccRoute;
-    /*CarrierRoute PriorityBasedCarrierRoute(vector<Order>& orders,
-                                       unordered_map<int, int>& orderPriority,
-                                       City& sellerLocation,
-                                       vector<vector<double>>& adj_matrix,
-                                       int hubId,
-                                       double vehicleCapacity)*/
-    /*CarrierRoute PersonalizedCarrierRouting(vector<Order>& orders,
-                                        int hubid,
-                                        const vector<City>& cities,
-                                        City& sellerLocation,
-                                        double vehicleCapacity,vector<vector<double>> adj_matrix)*/
+
     City hub=cities[spokeToHub[sellers[sid-1].location]-1];
 
 
@@ -1305,11 +1625,102 @@ else
         City city = cities[cityIdx-1];
         std::cout << "City ID: " << city.id
                   <<" City:"<<city.name<<"  ->  ";}
-    cout<<"cost:"<<24*ccRoute.totalDistance<<endl; //Rs. 24/km for personalized carrier
-    cout<<"time:"<<ceil(ccRoute.totalDistance/(16.0*50.0))<<" days"<<endl; //considering the vehicle operates 16 hrs per day at a speed of 50 km/hr
+    cout << endl;
+    double cost = 24*ccRoute.totalDistance;
+    int time = ceil(ccRoute.totalDistance/(16.0*50.0));
 
-}
+    cout<<"cost:"<< cost <<endl; //Rs. 24/km for personalized carrier
+    cout<<"time:"<<time<<" days"<<endl;
+
+    pair<int,double> pTimeNdCost = {time,cost};
+
+    cout << "-------------------- CONCLUSION -------------"<<endl;
+    cout << endl;
+        string bestModel;
+    int bestTime;
+    double bestCost;
+
+    if (goal == "time") {
+        int minTime = min({HubTimeNdCost.first, PPtimeNdCost.first, pTimeNdCost.first});
+        double tieBreakerCost = numeric_limits<double>::max();
+
+        if (HubTimeNdCost.first == minTime && HubTimeNdCost.second < tieBreakerCost) {
+            bestModel = "Hub and Spoke Model";
+            bestTime = HubTimeNdCost.first;
+            bestCost = HubTimeNdCost.second;
+            tieBreakerCost = bestCost;
+        }
+
+        if (PPtimeNdCost.first == minTime && PPtimeNdCost.second < tieBreakerCost) {
+            bestModel = "Point-to-Point Model";
+            bestTime = PPtimeNdCost.first;
+            bestCost = PPtimeNdCost.second;
+            tieBreakerCost = bestCost;
+        }
+
+        if (pTimeNdCost.first == minTime && pTimeNdCost.second < tieBreakerCost) {
+            bestModel = "Personalized Carrier Model";
+            bestTime = pTimeNdCost.first;
+            bestCost = pTimeNdCost.second;
+        }
+
+        cout << "Goal: Minimize **Time**\n";
+         cout << endl;
+        cout << "Among all models, the one with the **minimum time** is preferred.\n";
+        cout << "In case of tie on time, the model with **lower cost** is chosen.\n";
+         cout << endl;
+        cout << "=> Best Model: " << bestModel << "\n";
+         cout << endl;
+        cout << "   Time: " << bestTime << " units\n";
+        cout << "   Cost: " << bestCost << "\n";
+         cout << endl;
+
+
+    } else if (goal == "cost") {
+        double minCost = min({HubTimeNdCost.second, PPtimeNdCost.second, pTimeNdCost.second});
+        int tieBreakerTime = numeric_limits<int>::max();
+
+        if (HubTimeNdCost.second == minCost && HubTimeNdCost.first < tieBreakerTime) {
+            bestModel = "Hub and Spoke Model";
+            bestCost = HubTimeNdCost.second;
+            bestTime = HubTimeNdCost.first;
+            tieBreakerTime = bestTime;
+        }
+
+        if (PPtimeNdCost.second == minCost && PPtimeNdCost.first < tieBreakerTime) {
+            bestModel = "Point-to-Point Model";
+            bestCost = PPtimeNdCost.second;
+            bestTime = PPtimeNdCost.first;
+            tieBreakerTime = bestTime;
+        }
+
+        if (pTimeNdCost.second == minCost && pTimeNdCost.first < tieBreakerTime) {
+            bestModel = "Personalized Carrier Model";
+            bestCost = pTimeNdCost.second;
+            bestTime = pTimeNdCost.first;
+        }
+
+        cout << "Goal: Minimize **Cost**\n";
+         cout << endl;
+        cout << "Among all models, the one with the **minimum cost** is preferred.\n";
+        cout << "In case of tie on cost, the model with **lower time** is chosen.\n";
+         cout << endl;
+        cout << "=> Best Model: " << bestModel << "\n";
+         cout << endl;
+        cout << "   Cost: " << bestCost << "\n";
+        cout << "   Time: " << bestTime << " units\n";
+         cout << endl;
+
+    } else {
+        cout << "Invalid goal. Please choose either 'time' or 'cost'.\n";
+    }
+
+
+     cin.ignore();
+     cin.get();
+     exitscr();
+
+
     return 0;
 }
 //3 0 Delhi n Ghaziabad 700 1 Agra 800 1 Meerut 700 1 Jaipur 800 0
-
