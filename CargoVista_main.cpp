@@ -1727,8 +1727,8 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
     system("cls");
 
 } while (addMore == 'y' || addMore == 'Y');
-     cin.ignore();
-     cin.get();
+    /* cin.ignore();
+     cin.get(); */
      exitscr();
 
 
