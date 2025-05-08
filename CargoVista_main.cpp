@@ -1229,7 +1229,7 @@ void main_menu() {
     center_print(" Whether you're aiming to minimize costs, reduce delivery ");
     center_print(" time, or prioritize specific orders, CargoVista simulates");
     center_print(" all models for you.                                      ");
-    center_print(" Analyze. Compare. Deliver smarter — every time.          ");
+    center_print(" Analyze. Compare. Deliver smarter , every time.          ");
     center_print("                                                         ");
     center_print("+---------------------------------------------------------+");
     center_print("|                 CargoVista Roadmap                     |");
@@ -1256,7 +1256,7 @@ void main_menu() {
 
 void setConsoleColors() {
     // Set background to olive green and text to light yellow (beige approximation)
-    system("color 30");
+    system("color 3F");
     // '6' = olive/dark yellow background, 'A' = light green/yellow text
 }
 
@@ -1626,7 +1626,7 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
         std::cout << "City ID: " << city.id
                   <<" City:"<<city.name<<"  ->  ";}
     cout << endl;
-    double cost = 25*ccRoute.totalDistance;
+    double cost = 25*ccRoute.totalDistance + 500;
     int time = ceil(ccRoute.totalDistance/(16.0*50.0));
 
     cout<<"cost:"<< cost <<endl; //Rs. 24/km for personalized carrier
