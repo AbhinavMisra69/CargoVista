@@ -1462,6 +1462,11 @@ int main() {
     center_print("------------------------------");
     center_print(" Order Preferences Setup ");
     center_print("------------------------------\n");
+
+  char addMore;
+do {
+
+cout << "\nSimulation complete. Thank you for using CargoVista!\n";
     cout << "\n--- Upload Order Data ---\n";
     int sid;
     cout << "Enter seller ID (0 for new seller): ";
@@ -1715,7 +1720,13 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
         cout << "Invalid goal. Please choose either 'time' or 'cost'.\n";
     }
 
+   cout << "\nDo you want to add another seller? (y/n): ";
+    cin >> addMore;
 
+    // Optional: clear screen between iterations
+    system("cls");
+
+} while (addMore == 'y' || addMore == 'Y');
      cin.ignore();
      cin.get();
      exitscr();
