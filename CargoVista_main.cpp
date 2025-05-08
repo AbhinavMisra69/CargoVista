@@ -1,4 +1,4 @@
-const int d = 15;
+const int d = 12;
 const int v = 0.8;
 const int w = 1;
 #ifndef _GLIBCXX_NO_ASSERT
@@ -269,7 +269,7 @@ public:
     list<Order>pendingOrders;
 
     HubSpokeCarrier(){}
-    HubSpokeCarrier(int id, int hubLoc, double capWeight = 7000.0, double capVolume = 35.0, double spd = 40.0)
+    HubSpokeCarrier(int id, int hubLoc, double capWeight = 7000.0, double capVolume = 35.0, double spd = 50.0)
         : carrierId(id), hubLocationId(hubLoc), maxWeight(capWeight), maxVolume(capVolume), speed(spd),
           remainingWeight(capWeight), remainingVolume(capVolume) {}
 
@@ -1626,7 +1626,7 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
         std::cout << "City ID: " << city.id
                   <<" City:"<<city.name<<"  ->  ";}
     cout << endl;
-    double cost = 24*ccRoute.totalDistance;
+    double cost = 25*ccRoute.totalDistance;
     int time = ceil(ccRoute.totalDistance/(16.0*50.0));
 
     cout<<"cost:"<< cost <<endl; //Rs. 24/km for personalized carrier
