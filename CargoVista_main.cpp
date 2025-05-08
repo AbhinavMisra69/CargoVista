@@ -771,7 +771,7 @@ pair<int,double> PPCost(Seller& seller, vector<PPCarrier>& bestSolution,unordere
         for (int i = srcPos; i < destPos; ++i)
             dist += distBtwCities[nodes[route[i]].id - 1][nodes[route[i + 1]].id - 1];
 
-        double cost = dist * 18 + order.weight * 1.5;
+        double cost = dist * 18 + order.weight * 1.9;
         int timeDays = (int)ceil(dist / (40.0 * 16));  // 40 km/h, 16 hours/day
 
         totalCost += cost;
@@ -785,7 +785,7 @@ pair<int,double> PPCost(Seller& seller, vector<PPCarrier>& bestSolution,unordere
 
     cout << "Total cost for seller = Rs. " << totalCost << endl;
     cout << "All orders will be delivered within " << maxTime << " day(s)\n\n";
-    return {totalCost,maxTime};
+    return {maxTime,totalCost};
 }
 
 
@@ -1068,7 +1068,7 @@ void intro()
     {
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<chrono::seconds>(end - start).count();
-        if (duration >= 5)
+        if (duration >= 4)
         {
             clear_screen();
             break;
@@ -1208,7 +1208,7 @@ pair<int,double> run_hubspoke_model(Seller& seller) {
     cout << "All orders will be delivered within " << time << " day(s)\n\n";
 
 
-  return timeNdCost;
+  return {time,cost};
 
 }
 
@@ -1256,7 +1256,7 @@ void main_menu() {
 
 void setConsoleColors() {
     // Set background to olive green and text to light yellow (beige approximation)
-    system("color 3F");
+    system("color BF");
     // '6' = olive/dark yellow background, 'A' = light green/yellow text
 }
 
@@ -1455,7 +1455,6 @@ int main() {
     for (auto& seller : sellers) {
         cout << "Seller " << seller.sellerId << " (Location ID: " << seller.location << "  City:"<<cities[seller.location-1].name<<") has " << seller.orders.size() << " orders.\n";
     }
-     bool prioritize=false;
     //calling the input function
     cout << endl;
     cout << endl;
@@ -1465,6 +1464,7 @@ int main() {
 
   char addMore;
 do {
+         bool prioritize=false;
 
 cout << "\nSimulation complete. Thank you for using CargoVista!\n";
     cout << "\n--- Upload Order Data ---\n";
@@ -1601,26 +1601,26 @@ cout << "-----------------------PERSONALIZED CARRIER MODEL----------------------
 cout << endl;
 cout << endl;
 
-vector<Order> collectedOrders;
+/*vector<Order> collectedOrders;
 
-Order order(sid, sellers[sid - 1].location, destId, wt, vol);
-        sellers[sid - 1].addOrder(order);
+Order order(sid, sellers.back().location, destId, wt, vol);
+        sellers.back().addOrder(order);
         collectedOrders.push_back(order);
         if(prioritize){
 
             orderPriority[order.orderId]=priority;
         }
-
+*/
 
     CarrierRoute ccRoute;
 
-    City hub=cities[spokeToHub[sellers[sid-1].location]-1];
+    City hub=cities[spokeToHub[sellers.back().location]-1];
 
 
     if(prioritize)
-        ccRoute=PriorityBasedCarrierRoute(collectedOrders,orderPriority,cities[sellers[sid - 1].location-1],adj_matrix,hub.id,2000);
+        ccRoute=PriorityBasedCarrierRoute(sellers.back().orders,orderPriority,cities[sellers.back().location-1],adj_matrix,hub.id,2000);
     else
-        ccRoute=PersonalizedCarrierRouting(collectedOrders,hub.id,cities,cities[sellers[sid-1].location-1],2000);
+        ccRoute=PersonalizedCarrierRouting(sellers.back().orders,hub.id,cities,cities[sellers.back().location-1],2000);
 
 
 
@@ -1646,7 +1646,7 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
     double bestCost;
 
     if (goal == "time") {
-        int minTime = min({HubTimeNdCost.first, PPtimeNdCost.first, pTimeNdCost.first});
+        int minTime = min(HubTimeNdCost.first, min(PPtimeNdCost.first, pTimeNdCost.first));
         double tieBreakerCost = numeric_limits<double>::max();
 
         if (HubTimeNdCost.first == minTime && HubTimeNdCost.second < tieBreakerCost) {
@@ -1676,13 +1676,13 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
          cout << endl;
         cout << "=> Best Model: " << bestModel << "\n";
          cout << endl;
-        cout << "   Time: " << bestTime << " units\n";
+        cout << "   Time: " << bestTime << " day(s)\n";
         cout << "   Cost: " << bestCost << "\n";
          cout << endl;
 
 
     } else if (goal == "cost") {
-        double minCost = min({HubTimeNdCost.second, PPtimeNdCost.second, pTimeNdCost.second});
+        double minCost = min(HubTimeNdCost.second, min(PPtimeNdCost.second, pTimeNdCost.second));
         int tieBreakerTime = numeric_limits<int>::max();
 
         if (HubTimeNdCost.second == minCost && HubTimeNdCost.first < tieBreakerTime) {
@@ -1713,7 +1713,8 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
         cout << "=> Best Model: " << bestModel << "\n";
          cout << endl;
         cout << "   Cost: " << bestCost << "\n";
-        cout << "   Time: " << bestTime << " units\n";
+        cout << "   Time: " << bestTime << " day(s)\n";
+
          cout << endl;
 
     } else {
@@ -1728,10 +1729,10 @@ Order order(sid, sellers[sid - 1].location, destId, wt, vol);
 
 } while (addMore == 'y' || addMore == 'Y');
     /* cin.ignore();
-     cin.get(); */
+     cin.get();*/
      exitscr();
 
 
     return 0;
 }
-//3 0 Delhi n Ghaziabad 700 1 Agra 800 1 Meerut 700 1 Jaipur 800 0
+
