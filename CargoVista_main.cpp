@@ -1424,7 +1424,7 @@ int main() {
         }
     }
 
-    cout << "Total WCSS: " << wcss << endl;
+
     cout << endl;
 
     random_device rd;
@@ -1471,6 +1471,7 @@ cout << "\nSimulation complete. Thank you for using CargoVista!\n";
     int sid;
     cout << "Enter seller ID (0 for new seller): ";
     cin >> sid;
+
 
     if (sid == 0) {
         // New seller creation
@@ -1596,7 +1597,7 @@ cout << "\nSimulation complete. Thank you for using CargoVista!\n";
     }
 
        pair<int,double> PPtimeNdCost = PPCost(sellers.back(),bestSolution,orderToVehicleIdx,nodes);
-
+cout << endl;
 cout << "-----------------------PERSONALIZED CARRIER MODEL----------------------------" << endl;
 cout << endl;
 cout << endl;
@@ -1638,6 +1639,7 @@ Order order(sid, sellers.back().location, destId, wt, vol);
     cout<<"time:"<<time<<" days"<<endl;
 
     pair<int,double> pTimeNdCost = {time,cost};
+cout << endl;
 
     cout << "-------------------- CONCLUSION -------------"<<endl;
     cout << endl;
