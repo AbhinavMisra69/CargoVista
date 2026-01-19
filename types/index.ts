@@ -98,3 +98,9 @@ export interface OptimizationResult {
   cost: number;
   route: number[];
 }
+
+export interface SystemConfig {
+  spokeToHub: Record<number, number>; // Mapping City ID -> Hub ID
+  distMatrix: number[][];             // The 49x49 Floyd-Warshall result
+  hubs: number[];                     // Array of City IDs that are hubs
+}
