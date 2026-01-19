@@ -81,7 +81,7 @@ import { execSync } from 'child_process';
 import { prisma } from '@/lib/prisma';
 
 async function seed() {
-  // 1. Run C++ in "Init" mode
+  // 1. Run C++ 
   console.log("C++ is calculating the logistics network...");
   const rawData = execSync('./solver/bin/exporter').toString();
   const data = JSON.parse(rawData);
