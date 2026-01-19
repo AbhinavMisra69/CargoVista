@@ -76,3 +76,28 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+import { execSync } from 'child_process';
+import { prisma } from '@/lib/prisma';
+
+async function seed() {
+  // 1. Run C++ in "Init" mode
+  console.log("C++ is calculating the logistics network...");
+  const rawData = execSync('./solver/bin/exporter').toString();
+  const data = JSON.parse(rawData);
+
+  // 2. Save Matrix and Hub-mapping to MongoDB
+  await prisma.systemConfig.upsert({
+    where: { key: 'network_data' },
+    update: { 
+      matrix: data.matrix,
+      spokeToHub: data.spokeToHub 
+    },
+    create: { 
+      key: 'network_data', 
+      matrix: data.matrix,
+      spokeToHub: data.spokeToHub 
+    },
+  });
+  console.log("Database initialized with optimized C++ results.");
+}
