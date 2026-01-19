@@ -1,0 +1,10 @@
+// prisma/schema.prisma
+
+model City {
+  id        Int     @id @map("_id") // We use your C++ ID as the primary key
+  name      String
+  x         Float   // Your C++ X coordinate
+  y         Float   // Your C++ Y coordinate
+  isHub     Boolean @default(false)
+  hubId     Int?    // If it's a spoke, which hub does it belong to?
+}
