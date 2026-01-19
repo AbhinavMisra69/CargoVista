@@ -8,3 +8,10 @@ model City {
   isHub     Boolean @default(false)
   hubId     Int?    // If it's a spoke, which hub does it belong to?
 }
+
+model SystemConfig {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  key          String   @unique // Example: "distance_matrix"
+  matrix       Json     // Ismein hum 49x49 ka 2D array store karenge
+  updatedAt    DateTime @updatedAt
+}
